@@ -1,0 +1,46 @@
+# Log files
+*.log
+*.log.*
+
+# Virtual environment files
+venv/
+
+# PyCharm idea files or other IDE files
+.idea
+
+# Cache data
+__pycache__/
+
+# Python compiled bytecode files for module imports
+*.pyc
+
+# Hidden Mac OS files
+.DS_Store
+
+# Project files
+.project
+
+# Gradle folder
+.gradle
+
+# Settings folder
+.settings
+
+# Coverage settings
+.coverage
+.coveragerc
+test-reports/
+
+# Docs folder
+# generated with pdoc https://pypi.org/project/pdoc3/
+docs/
+
+# AWS SAM Build
+.aws-sam/
+.aws-sam/build
+
+# AWS Chalice
+.chalice/deployments/
+.chalice/deployed/
+.chalice/venv/
+/htmlcov/

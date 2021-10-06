@@ -1,0 +1,31 @@
+{
+  "version": "2.0",
+  "app_name": "template",
+  "stages": {
+    "local": {
+      "api_gateway_stage": "mcs",
+      "environment_variables": {
+        "RDS_NODE_RW_DATABASE": "schema",
+        "RDS_NODE_RW_ENDPOINT": "localhost",
+        "RDS_NODE_RW_PORT": "3306",
+        "RDS_NODE_RW_USERNAME": "root",
+        "RDS_NODE_RW_PASSWORD": "password",
+        "RDS_NODE_RO_DATABASE": "schema",
+        "RDS_NODE_RO_ENDPOINT": "localhost",
+        "RDS_NODE_RO_PORT": "3306",
+        "RDS_NODE_RO_USERNAME": "root",
+        "RDS_NODE_RO_PASSWORD": "password",
+        "CACHE_ENDPOINT": "localhost",
+        "CACHE_PORT": "6379",
+        "CACHE_EXPIRATION": "3600",
+        "LOGGER_LEVEL": "INFO"
+      }
+    },
+    "dev": {
+      "api_gateway_stage": "mcs",
+      "environment_variables": {
+        "DOMAIN_URL": "https://domain-url.es/mcs/"
+      }
+    }
+  }
+}
