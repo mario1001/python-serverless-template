@@ -3,13 +3,15 @@
 # Free Software design purposes at any version of this repository.
 
 """
-PES Topics microservice validation module.
+Python Serverless microservice template validation module.
 
 Attempts to the software design decorator pattern.
 Also providing a decorator controller for this package to be used.
 """
+
 import json
 import re
+from typing import Any, Dict, List, Tuple
 
 import chalicelib.core as core
 import chalicelib.domain as domain
@@ -20,46 +22,149 @@ from chalicelib.controllers import Controller
 from chalicelib.dto.responses import ResponsePagination
 
 
+class RequestParameter(object):
+    """
+    Request Parameter class specification for this module.
+
+    Represents a request parameter obtained from AWS Gateway, contains name, type and value
+    for validation module.
+    """
+
+    @property
+    def name(self) -> str:
+        return self.__name
+
+    @name.setter
+    def name(self, value):
+        self.__name = value
+
+    @property
+    def type(self) -> object:
+        return self.__type
+
+    @type.setter
+    def type(self, value):
+        self.__type = value
+
+    @property
+    def value(self) -> Any:
+        return self.__value
+
+    @value.setter
+    def value(self, value):
+        self.__value = value
+
+    @property
+    def required(self) -> bool:
+        return self.__required
+
+    @required.setter
+    def required(self, value):
+        self.__required = value
+
+    def __init__(self, name: str, value: str, required: bool = True) -> None:
+        """
+        Creates a request parameter instance.
+
+        :param name: The parameter name (key, field as you want)
+        :type name: str
+        :param type: [description]
+        :type type: [type]
+        :param value: [description]
+        :type value: str
+        :param required: Mandatory flag, defaults to True
+        :type required: bool, optional
+        """
+
+        self.name = name
+
+        self.type = self.accurate_type(value)
+        self.value = self.type(value)
+        self.required = required
+
+    @staticmethod
+    def accurate_type(type: str) -> object:
+
+        # Try the integer conversion
+        try:
+            return int(type)
+        except ValueError:
+            pass
+
+        # Try with floating conversion
+        try:
+            return float(type)
+        except ValueError:
+            pass
+
+        return type
+
+
+class StrictRequestParameter(RequestParameter):
+    """
+    Strict request parameter class.
+    """
+
+    @property
+    def allowed(self) -> bool:
+        return self.__allowed
+
+    @allowed.setter
+    def allowed(self, value):
+        self.__allowed = value
+
+
 class ParameterController(Controller):
     """
     Parameter controller base class reference.
 
     Handle parameter validation along
-    with path and query ones.
+    with path (called 'uri' as for chalice) and query ones.
+
+    Mantain the serverless definition (only handle one
+    request per component construction).
 
     This class really translate not pythonic-way
     schema parameters into real ones. Should be
-    used for Python SonarQube best practices.
+    used for Python SonarQube best practices also.
     """
 
     # For passing from Camel case to snake case
     pattern = re.compile(r"(?<!^)(?=[A-Z])")
 
     @property
-    def parameters(self) -> dict:
+    def parameters(self) -> List[RequestParameter]:
         return self.__parameters
 
     @parameters.setter
     def parameters(self, value):
         self.__parameters = value
 
-    def __init__(self, parameters: dict) -> None:
-        try:
-            # Check initialization firstly
-            self.parameters
-        except AttributeError:
-            self.parameters = dict()
+    def __init__(
+        self, parameters: Dict[str, Tuple[str, bool]], pythonic: bool = True
+    ) -> None:
+        """
+        Creates a parameter controller with specific parameters (with options inside)
+        and a python flag for remaking attributes.
 
-        if not isinstance(parameters, dict):
-            return
+        What we mean with configuration/options is the detail for that parameter (required
+        or not, etc...)
 
-        self.__pass_filters(parameters)
+        :param parameters: Dictionary with keys as names and values along with configuration
+        :type parameters: Dict[str, Tuple[str, bool]]
+        :param pythonic: [description], defaults to True
+        :type pythonic: bool, optional
+        """
 
-    def __pass_filters(self, parameters: dict):
-        for parameter_name, parameter_value in parameters.items():
-            parameter_name = self.camel_case_to_snake_case(parameter_name)
+        self.parameters = list()
+        for name, properties in parameters.items():
+            value, required = properties
 
-            self.parameters[parameter_name] = parameter_value
+            if pythonic:
+                name = self.camel_case_to_snake_case(name)
+
+            request_parameter = RequestParameter(name, value, required)
+            self.parameters.append(request_parameter)
 
     @classmethod
     def camel_case_to_snake_case(cls, parameter):
@@ -77,103 +182,139 @@ class ParameterController(Controller):
         return cls.pattern.sub("_", parameter).lower()
 
     def __str__(self):
+        """
+        Method for string conversion for this object.
+
+        :return: The JSON representation with parameters in string format
+        :rtype: str
+        """
+
         return json.dumps(self.parameters)
 
 
 class PathParameterController(ParameterController):
     """
     Path parameter controller class reference.
+
+    Inherits from parameter controller, so it will
+    provide the parameters property for saving the ones available to use.
     """
 
-    # AWS Gateway Event for lambda function (chalice reformat the request)
-
-    PATH_PARAMETERS_ATTRIBUTE = "pathParameters"
-
-    @property
-    def path_parameters(self):
-        return self.__path_parameters
-
-    @path_parameters.setter
-    def path_parameters(self, value):
-        self.__path_parameters = value
-
     @core.register("uri")
-    def __init__(self, request: Request) -> None:
+    def __init__(self, request: Request, pythonic: bool = True) -> None:
         """
-        Creates a controller with path parameters.
+        Creates a controller with AWS Chalice request.
 
-        :param parameters: Path parameters in dictionary form
-        :type parameters: dict
+        Not really needs any validation, cause path parameters
+        are going to be configured within AWS API Gateway and they
+        are always required ones.
+
+        :param request: AWS Chalice request obtained from framework
+        :type request: chalice.app.Request
         """
 
         parameters = request.uri_params
 
-        self.path_parameters = parameters
+        if parameters is None:
+            parameters = dict()
 
-        super().__init__(parameters)
+        super().__init__(
+            {parameter: (value, True) for parameter, value in parameters},
+            pythonic,
+        )
 
 
 class QueryParameterController(ParameterController):
     """
     Query parameter controller class reference.
 
-    One can simply create a query parameter controller specifying
-    two properties/fields:
-    -QUERY_PARAMETERS_ALLOWED: For allowed ones with validation
-    -QUERY_PARAMETERS_REQUIRED: For required ones (does not need
-    to be in allowed ones if they are defined here).
+    Creating a query controller instance needs some specific
+    configuration along with the class constructor attributes.
 
-    One main important thing is that query properties/
-    attributes to search with NEEDS to be in snake case notation
-    (no camel case allowed as functionality here).
+    You can define a query controller for some specific
+    AWS Chalice request validation. Design your configuration
+    as you want when instance creation.
     """
 
-    # AWS Gateway Event for lambda function (chalice reformat the request)
-
-    QUERY_PARAMETERS_ATTRIBUTE = "queryStringParameters"
-
     @property
-    def query_parameters_allowed(self):
-        return self.__query_parameters_allowed
+    def configuration(self) -> List[RequestParameter]:
+        return self.__configuration
 
-    @query_parameters_allowed.setter
-    def query_parameters_allowed(self, value):
-        self.__query_parameters_allowed = value
-
-    @property
-    def query_parameters_required(self):
-        return self.__query_parameters_required
-
-    @query_parameters_required.setter
-    def query_parameters_required(self, value):
-        self.__query_parameters_required = value
-
-    @property
-    def query_parameters(self):
-        return self.__query_parameters
-
-    @query_parameters.setter
-    def query_parameters(self, value):
-        self.__query_parameters = value
+    @configuration.setter
+    def configuration(self, value):
+        self.__configuration = value
 
     @core.register("query")
-    def __init__(self, request: Request) -> None:
+    def __init__(
+        self,
+        request: Request,
+        configuration: List[RequestParameter] = None,
+        pythonic: bool = True,
+    ) -> None:
         """
-        Creates a query parameter controller instance with AWS event.
+        Creates a query parameter controller instance with parameters.
 
-        :param event: AWS Gateway event
-        :type event: dict
+        Configuration The list of request parameters would be created right here along with
+        parameter validations or verifications.
 
-        :raises BadRequestException: When no query parameter designed for request
+        :param request: [description]
+        :type request: Request
+        :param configuration: [description], defaults to None
+        :type configuration: List[RequestParameter], optional
+        :param pythonic: [description], defaults to True
+        :type pythonic: bool, optional
         """
 
+        if configuration is None:
+            configuration = list()
+
+        # Set configuration firstly
+        self.configuration = configuration
         parameters = request.query_params
 
-        ParameterController.__init__(self, parameters)
-        self.query_parameters = parameters
+        if parameters is None:
+            parameters = dict()
 
-        # Also resetting here the required parameters for next operations
-        self.query_parameters_required = {}
+        query_parameters_allowed = [
+            parameter.name
+            for parameter in self.configuration
+            if (
+                isinstance(parameter, StrictRequestParameter)
+                and parameter.allowed
+            )
+            or isinstance(parameter, RequestParameter)
+        ]
+        query_parameters_required = [
+            parameter.name
+            for parameter in self.configuration
+            if isinstance(parameter, RequestParameter) and parameter.required
+        ]
+
+        # Make validation right here with configuration
+        for parameter, value in parameters.items():
+
+            # Check if snake case (or conversion to that)
+            if pythonic:
+                parameter = self.camel_case_to_snake_case(parameter)
+
+            if parameter not in query_parameters_allowed:
+                raise BadRequestException(
+                    error_message="Query parameter "
+                    "{} is not allowed for this endpoint".format(parameter)
+                )
+
+            if parameter in query_parameters_required:
+                del query_parameters_required[parameter]
+
+            parameters[parameter] = value
+
+        if query_parameters_required:
+            raise BadRequestException(
+                error_message="Query required parameters "
+                "{} for this endpoint".format(query_parameters_required)
+            )
+
+        super().__init__(self, parameters, pythonic)
 
 
 class PaginationController(QueryParameterController):

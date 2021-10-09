@@ -24,6 +24,7 @@ SAMPLE_USER_DICT = {
 }
 
 
+@core.logger
 @router.route("/")
 def index():
 
@@ -44,6 +45,7 @@ def list_users():
     )
 
 
+@core.logger
 @router.route("/users", methods=["POST", "PUT"])
 def create_user():
     handlers.save_request(router.current_request)
@@ -57,6 +59,7 @@ def create_user():
     )
 
 
+@core.logger
 @router.route("/users/{uid}", methods=["GET"])
 def get_user(uid):
 
@@ -71,6 +74,7 @@ def get_user(uid):
     )
 
 
+@core.logger
 @router.route("/users/{uid}", methods=["DELETE"])
 def delete_user(uid):
 

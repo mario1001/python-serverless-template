@@ -1,10 +1,10 @@
 # Python Serverless backend service template
 
-Designing a template with AWS Chalice framework for serverless applications. Mainly influenced by other projects (PES projects for example) along with a common architecture for our backend services.
+It's intended to be a framework based-template for serverless projects.
 
 The recommended version to use is Python 3.8, main reason is that AWS lambda functions are strictly limited by that one.
 
-This template is intended to be oriented for serverless microservices with some of the design patterns inherited from Spring framework in Java. There's DI along with an application context (not that rough and heavy of course).
+This template is intended to be oriented for serverless microservices with some of the design patterns inherited from Spring framework in Java development. There's DI along with an application context (not that rough and heavy of course).
 
 There's certain concepts you need to know before exploring this template:
 

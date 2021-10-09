@@ -1,3 +1,11 @@
+# Created in June 12, 2021 by Mario Benito.
+#
+# Free Software design purposes at any version of this repository.
+
+"""
+HTTP Controller module definition.
+"""
+
 from typing import List
 from http import HTTPStatus
 
@@ -72,13 +80,16 @@ class HTTPController(Controller):
         try:
             status_code, body = self.main_service.dispatch(request, method)
         except HTTPRequestException as e:
-            return Response(status_code=e.http_status, body=e.get_response().body)
+            return Response(
+                status_code=e.http_status, body=e.get_response().body
+            )
         except exceptions.DatabaseException as e:
             logs.system_logger.log(
                 "error",
                 "[{MODULE}][{FUNCTION}]: ".format(
                     MODULE=__name__, FUNCTION=self.process_request.__name__
-                ) + "Catching error: {}".format(str(e)),
+                )
+                + "Catching error: {}".format(str(e)),
             )
             return Response(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
