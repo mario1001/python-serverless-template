@@ -46,6 +46,6 @@ class Controller(ABC, metaclass=core.context_class):
     """
 
 
-from chalicelib.controllers.security_controller import SecurityController
-from chalicelib.controllers.http_controller import HTTPController
-from chalicelib.controllers.color_controller import ColorController
+import chalicelib.controllers.security_controller as security_controller
+import chalicelib.controllers.validation as validation
+import chalicelib.controllers.translator as translator

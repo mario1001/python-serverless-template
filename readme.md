@@ -13,7 +13,7 @@ There's certain concepts you need to know before exploring this template:
   * Component: Object/instance with base class ContextABC in project (abstract class for defining our components), based on Spring component/bean concept to work with. Every controller, service and repository
   abstract classes are *components* in the template.
   * Resources: Main resources defined for the project (this could be config vars or some memory-instances defined, could be constants or shared features also).
-  * Entity: Domain model object (domain package). There are different types of domain objects: Models (database entities definition) enum table configuration along with relationships and database requests options for repository usages (based in PES DaaS request_options module).
+  * Entity: Domain model object (domain package). There are different types of domain objects: Models (database entities definition) enum table configuration along with relationships and database requests options for repository usages.
   * Bean: Component to inject by the core framework.
 <br />
 
@@ -66,13 +66,13 @@ Also it's recommended to install [git](https://git-scm.com/downloads) along with
 Download this repository or clone it with the following command:
 
 ```sh
-git clone https://stash.project-tools.santillanatn.com/scm/pridig/pridig-service-template.git
+git clone https://github.com/mario1001/python-serverless-template.git
 ```
 
 For running the project you will need to install the dependencies. Run the following command for modules clean installation:
 
 ```sh
-cd pridig-service-template
+cd python-serverless-template
 python -m pip install -r requirements.txt
 ```
 
@@ -84,7 +84,7 @@ But you also require AWS Chalice (the base framework for building our projects) 
 python -m pip install chalice
 ```
 
-You should read the official documentation about [AWS Chalice](https://aws.github.io/chalice/main.html) before exploring and understanding the template modules. Chalice provides a local way to tests the lambda functions without using Docker or AWS SAM utilities (those were used in other projects like PES references).
+You should read the official documentation about [AWS Chalice](https://aws.github.io/chalice/main.html) before exploring and understanding the template modules. Chalice provides a local way to tests the lambda functions without using Docker or AWS SAM utilities.
 
 When installing the chalice package, it would give you also the chalice command line functionality (you can test it in console with: *chalice* "option" or just *chalice*). 
 <br/>
@@ -101,7 +101,7 @@ $ python -m pip install pytest
 $ python -m pip install pytest-cov
 ```
 
-So then you just can access to the project main directory location (*pridig-service-template* in our case) and run the following:
+So then you just can access to the project main directory location (*python-serverless-template* in our case) and run the following:
 
 ```sh
 $ python -m pytest
@@ -111,7 +111,7 @@ $ python -m pytest
 ## Structure and modules
 
 ```
-  pridig-service-template/                # Project main directory
+  python-serverless-template/                # Project main directory
   ├── README.md                              # Project explanation file
   ├── chalicelib/                            # AWS Chalice library with custom modules
   │     ├── __init__.py                         # Chalice library main module
@@ -152,8 +152,8 @@ So here goes the explanation about the template architecture, designed to be a m
 It's the main layer in the application because: flow control, HTTP requests managed by applying the business logic (with the help of service layer) and forming the responses in case of needs (also featuring common responsabilities).
 * **Service layer**: Manages controller requests with a main service with a dispatcher for the tasks, each task could be requested by different services (each resource service to be named). There's some services defined in the template: Cache service and the service abstract base class. Deals always with DTO requests/responses but never creating/managing database entity operations (do not confuse service layer with repository layer).
 * **Repository layer**: Main layer for dealing with domain model items, these instances would be in domain package (defined in the models package), service layer would request these services for getting domain objects and forming the specific responses as DTO for controllers. There's a *BaseRepository* class defined in the *mysql_repository* module for many features provided for projects (since session providers, custom commit operations prepared, entity searched with table name or custom native SQL queries with MySQL statements executions).
-* **Logging layer**: Inherited from PES projects, form a system logger base class with several features (mainly ones) for logs with parameters or with different formats. Also could be provided a different logger handler with distinct instances for logging (with files also for no serverless purposes)
-* **Exception layer**: Inherited from PES projects, manages the distinct exceptions in the application: One module
+* **Logging layer**: Form a system logger base class with several features (mainly ones) for logs with parameters or with different formats. Also could be provided a different logger handler with distinct instances for logging (with files also for no serverless purposes)
+* **Exception layer**: Manages the distinct exceptions in the application: One module
 per layer for dealing with different exceptions (also importing here the AWS Resources library RESTful API exceptions).
 * **Core layer**: Special layer with core modules: Database Client pool, definition of application context and decorators for components in our application. Defines the framework-utilities to use (like DI dependency injector features or logs programmed). 
 <br/>
@@ -272,4 +272,4 @@ module.function()
 
 ## Authors
 
-* **Mario Benito** - *Initial work* - [Stash profile](https://stash.project-tools.santillanatn.com/users/mario.benito)
+* **Mario Benito** - *Initial work*
