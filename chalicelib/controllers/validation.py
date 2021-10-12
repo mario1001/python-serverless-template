@@ -15,14 +15,15 @@ from typing import Dict
 
 import chalicelib.core as core
 import chalicelib.domain as domain
+import chalicelib.controllers as controllers
+
 from aws_resources.exceptions.http_exceptions import BadRequestException
 
 from chalice.app import Request, BadRequestError
-from chalicelib.controllers import Controller
 from chalicelib.dto.responses import ResponsePagination
 
 
-class ParameterController(Controller):
+class ParameterController(controllers.ProcessingController):
     """
     Parameter controller base class reference.
 
@@ -30,7 +31,8 @@ class ParameterController(Controller):
     with path (called 'uri' as for chalice) and query ones.
 
     Mantain the serverless definition (only handle one
-    request per component construction).
+    request per component construction). But this does not
+    mean that using different containers always.
 
     This class really translate not pythonic-way
     schema parameters into real ones. Should be
@@ -41,33 +43,62 @@ class ParameterController(Controller):
     pattern = re.compile(r"(?<!^)(?=[A-Z])")
 
     @property
-    def parameters(self) -> Dict[str, str]:
-        return self.__parameters
+    def requests(self) -> Dict[Request, Dict[str, str]]:
+        return self.__requests
 
-    @parameters.setter
-    def parameters(self, value):
-        self.__parameters = value
+    @requests.setter
+    def requests(self, value):
+        self.__requests = value
 
-    def __init__(
-        self, parameters: Dict[str, str], pythonic: bool = True
-    ) -> None:
+    @property
+    def last_request(self) -> Request:
         """
-        Creates a parameter controller with specific parameters
-        and a python flag for remaking attributes.
+        Property for getting the last request inside this controller.
 
-        :param parameters: Dictionary with keys as names and values along with configuration
-        :type parameters: Dict[str, Tuple[str, bool]]
-        :param pythonic: [description], defaults to True
-        :type pythonic: bool, optional
+        :return: Last AWS Chalice request obtained from track
+        :rtype: chalice.app.Request
+        """
+
+        return self.parameters.keys()[-1]
+
+    def __init__(self) -> None:
+        """
+        Creates a parameter controller instance to be used.
         """
 
         self.parameters = dict()
+
+    def process(
+        self,
+        request: Request,
+        parameters: Dict[str, str],
+        pythonic: bool = True,
+    ) -> None:
+        """
+        Main method for processing a AWS Chalice request.
+
+        It saves specific parameters
+        and uses a python flag for remaking attributes.
+
+        :param request: original AWS Chalice request
+        :type request: Request
+
+        :param parameters: Parameters obtained from specific validation controller
+        :type parameters: Dict[str, str]
+
+        :param pythonic: Flag for remaking parameters in pythonic way, defaults to True
+        :type pythonic: bool, optional
+        """
+
+        parameters_to_save = dict()
         for name, value in parameters.items():
 
             if pythonic:
                 name = self.camel_case_to_snake_case(name)
 
-            self.parameters[name] = value
+            parameters_to_save[name] = value
+
+        self.parameters[request] = parameters_to_save
 
     @classmethod
     def camel_case_to_snake_case(cls, parameter):
@@ -111,7 +142,7 @@ class PathParameterController(ParameterController):
     """
 
     @core.register("uri")
-    def __init__(self, request: Request, pythonic: bool = True) -> None:
+    def __init__(self) -> None:
         """
         Creates a controller with AWS Chalice request.
 
@@ -123,9 +154,28 @@ class PathParameterController(ParameterController):
         :type request: chalice.app.Request
         """
 
-        super().__init__(
-            self.form_data(request.uri_params),
-            pythonic,
+        super().__init__()
+
+    def process(
+        self, request: Request, parameters=None, pythonic: bool = True
+    ) -> None:
+        """
+        Main method for processing the AWS Chalice request.
+
+        :param request: original AWS Chalice request
+        :type request: Request
+
+        :param parameters: URI/Path extra parameters obtained, defaults to None
+        :type parameters: Dict[str, str]
+
+        :param pythonic: Flag for remaking parameters in pythonic way, defaults to True
+        :type pythonic: bool, optional
+        """
+
+        return super().process(
+            request=request,
+            parameters=self.form_data(request.uri_params),
+            pythonic=pythonic,
         )
 
 
@@ -138,22 +188,34 @@ class QueryParameterController(ParameterController):
     """
 
     @core.register("query")
-    def __init__(
-        self,
-        request: Request,
-        pythonic: bool = True,
+    def __init__(self) -> None:
+        """
+        Creates a query parameter controller instance to be used.
+        """
+
+        super().__init__()
+
+    def process(
+        self, request: Request, parameters=None, pythonic: bool = True
     ) -> None:
         """
-        Creates a query parameter controller instance with parameters.
+        Main method for processing the AWS Chalice request.
 
-        :param request: [description]
+        :param request: original AWS Chalice request
         :type request: Request
 
-        :param pythonic: [description], defaults to True
+        :param parameters: Query extra parameters obtained, defaults to None
+        :type parameters: Dict[str, str]
+
+        :param pythonic: Flag for remaking parameters in pythonic way, defaults to True
         :type pythonic: bool, optional
         """
 
-        super().__init__(self, self.form_data(request.query_params), pythonic)
+        return super().process(
+            request=request,
+            parameters=self.form_data(request.query_params),
+            pythonic=pythonic,
+        )
 
 
 class BodyController(ParameterController):
@@ -162,12 +224,27 @@ class BodyController(ParameterController):
     """
 
     @core.register("body")
-    def __init__(self, request: Request) -> None:
+    def __init__(self) -> None:
         """
-        Creates a body controller instance with AWS Chalice request.
+        Creates a body controller instance to be used.
+        """
 
-        :param request: AWS Chalice event request
-        :type request: :class: `chalice.app.Request`
+        super().__init__()
+
+    def process(
+        self, request: Request, parameters=None, pythonic: bool = True
+    ) -> None:
+        """
+        Main method for processing the AWS Chalice request.
+
+        :param request: original AWS Chalice request
+        :type request: Request
+
+        :param parameters: Extra parameters obtained, defaults to None
+        :type parameters: Dict[str, str]
+
+        :param pythonic: Flag for remaking parameters in pythonic way, defaults to True
+        :type pythonic: bool, optional
         """
 
         try:
@@ -177,8 +254,14 @@ class BodyController(ParameterController):
                 error_message="There is an error in body of HTTP request"
             )
 
+        # TODO Should check here for supporting list provided functionality
+
         # Request body seems to be in the good Python format we want
-        super().__init__(body)
+        return super().process(
+            request=request,
+            parameters=self.form_data(body),
+            pythonic=pythonic,
+        )
 
 
 class PaginationController(QueryParameterController):

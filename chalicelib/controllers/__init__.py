@@ -5,47 +5,60 @@
 """
 Python Serverless template controller layer module.
 
+Main purpose of this layer is provide external utilities as within core
+by making a some inspired framework for serverless applications (could be
+for several goals, microservices or just step functions with AWS lambda per example).
+
 This module defines the concept of Object oriented-paradigm controllers that
 maintain the flow execution during the first stages, required of Abstract
-patterns defined (known as interfaces) causing the operative of this project service.
+patterns defined (known as interfaces) causing the operative for this project service.
 
-Makes every "external" validation for parameters obtained from AWS events
-and creates service requests (specific object on DTO layer
-created in time execution) for the service layer.
+There are different type of controllers right here, ones declared for validation and
+logging features (better understanding of the program), utilities ones (just for authentication
+or security issues) and bean translator ones for object composite process.
 
-Some of the validations also reside in the service layer, these ones are called
-"internal" validations and are treated separately after controller execution.
-
-Each controller would represent different type of process (one for endpoint
-definition, another one for parameter validation or many other features
-that require some initial management in the end). This technique is fully inspired
-by Spring framework in Java.
+This module would export the controller beans for the program execution
+in the specific layers of your application, every controller have already the controller
+role just like the MVC software design (Model-View-Controller pattern).
 """
 
 # Here goes the controller custom classes
 
-from abc import ABC
+from abc import ABC, abstractmethod
 import chalicelib.core as core
 
 
 class Controller(ABC, metaclass=core.context_class):
     """
-    Controller interface reference.
+    Abstract controller interface reference.
 
     Any class extending this type would be considered
-    a controller, having three roles associated:
+    a controller. Main purpose of a controller is handle
+    data, manage redirections with other controllers or
+    call some other core component for its functionality.
 
-    -Parameter validation obtained from AWS Responses/structures.
-    -Standard custom implementation for processing those HTTP requests.
-    -Calling this project service layer somehow/someway.
-
-    Controllers are made for processing HTTP requests for this service.
-    So it does not have an operation for that with specifications, with
-    serverless architecture controllers will rise up directly for processing
-    requests (that's they way these components are designed for).
+    These ones are designed for a serverless architecture,
+    mainly for AWS Chalice applications with other backend features.
     """
 
 
-import chalicelib.controllers.security_controller as security_controller
+class ProcessingController(Controller):
+    """
+    Abstract Processing controller class reference.
+
+    :param Controller: [description]
+    :type Controller: [type]
+    """
+
+    @abstractmethod
+    def process(self):
+        """
+        Main method for processing information.
+
+        Parameters could be customized along with the implementation.
+        """
+
+
+import chalicelib.controllers.security as security
 import chalicelib.controllers.validation as validation
 import chalicelib.controllers.translator as translator

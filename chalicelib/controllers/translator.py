@@ -81,7 +81,7 @@ class BeanController(controllers.Controller):
         self, controllers: List[controllers.validation.ParameterController]
     ) -> None:
         """
-        Private method for logging the parameter controllers injected.
+        Private method for logging the parameters in controllers injected.
         """
 
     @core.logger
@@ -95,6 +95,10 @@ class BeanController(controllers.Controller):
         :param request: AWS Chalice request mapped
         :type request: chalice.app.Request
         """
+
+        self.path_parameter_controller.process(request=request)
+        self.query_parameter_controller.process(request=request)
+        self.body_controller.process(request=request)
 
         path_parameters = self.path_parameter_controller.parameters
         query_parameters = self.query_parameter_controller.parameters
@@ -167,11 +171,3 @@ class BeanController(controllers.Controller):
         for comp in components[1:]:
             mod = getattr(mod, comp)
         return mod
-
-    @core.inject(ref=controllers.validation.PathParameterController)
-    @core.inject(ref=controllers.validation.QueryParameterController)
-    @core.inject(ref=controllers.validation.BodyController)
-    def reset(self) -> None:
-        """
-        Reset the parameter controllers with new ones.
-        """
