@@ -11,7 +11,7 @@ Also providing a decorator controller for this package to be used.
 
 import json
 import re
-from typing import Dict
+from typing import Any, Dict, List, Union
 
 import chalicelib.core as core
 import chalicelib.domain as domain
@@ -71,7 +71,7 @@ class ParameterController(controllers.ProcessingController):
     def process(
         self,
         request: Request,
-        parameters: Dict[str, str],
+        parameters: Union[Dict[str, Any], List[Any]],
         pythonic: bool = True,
     ) -> None:
         """
@@ -84,11 +84,20 @@ class ParameterController(controllers.ProcessingController):
         :type request: Request
 
         :param parameters: Parameters obtained from specific validation controller
-        :type parameters: Dict[str, str]
+        :type parameters: Union[Dict[str, Any], List[Any]]
 
         :param pythonic: Flag for remaking parameters in pythonic way, defaults to True
         :type pythonic: bool, optional
         """
+
+        if isinstance(parameters, list):
+            # Having a list with easy types or not (could be dictionary or internal lists)
+
+            self.parameters[request] = parameters
+            return
+
+        # Standard case: A simple or complex dictionary
+        # (could always contain lists or even other dictionaries)
 
         parameters_to_save = dict()
         for name, value in parameters.items():
@@ -253,8 +262,6 @@ class BodyController(ParameterController):
             raise BadRequestException(
                 error_message="There is an error in body of HTTP request"
             )
-
-        # TODO Should check here for supporting list provided functionality
 
         # Request body seems to be in the good Python format we want
         return super().process(

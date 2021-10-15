@@ -22,7 +22,7 @@ in the specific layers of your application, every controller have already the co
 role just like the MVC software design (Model-View-Controller pattern).
 """
 
-# Here goes the controller custom classes
+# Here goes the controller main definition
 
 from abc import ABC, abstractmethod
 import chalicelib.core as core

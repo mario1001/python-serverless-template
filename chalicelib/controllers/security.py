@@ -4,6 +4,10 @@
 
 """
 Security controller module.
+
+This module is dedicated as a security layer inside the special
+controller module, defines and specifies every security controller
+that could be injected in the template services. 
 """
 
 import chalicelib.core as core
@@ -47,8 +51,8 @@ class SecurityController(Controller):
 
     def get_payload(self, authentication_token: str) -> AuthenticationPayload:
         """
-        Validate JWT token with SHA256 algorithm (API Distribution uses
-        this algorithm) and retrieve the payload from its content.
+        Validate JWT token with SHA256 algorithm
+        and retrieve the payload from its content.
 
         Payload is exposed in a DTO way.
 

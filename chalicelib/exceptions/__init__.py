@@ -13,6 +13,7 @@ from chalicelib.exceptions.core_exceptions import (
     ClientNotFoundException,
     DependencyInjectionException,
     NodeNotFoundException,
+    BeanNotFoundException,
 )
 from chalicelib.exceptions.handler_exceptions import (
     MAPPED_MESSAGES,

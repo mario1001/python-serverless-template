@@ -40,8 +40,8 @@ class ApplicationContext(object):
     original, keep in mind the documentation here designed for
     saving beans along with the core.
 
-    There's only one instance when running a chalice application, followin
-    the singleton pattern also for context, makes metadata class registries
+    There's only one instance when running a chalice application, following
+    the singleton pattern also for context, makes metadata class registries.
 
     Does provide a property for getting the beans working with (this one
     it's pretty different from Spring configuration, allowing here some

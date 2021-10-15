@@ -9,10 +9,13 @@ Defines a translator controller for creating models in time execution.
 """
 
 import inspect
-from typing import Dict, List
+from typing import Any, Dict, List, Union
+
+from pydantic import BaseModel, ValidationError
 
 import chalicelib.core as core
 import chalicelib.controllers as controllers
+import chalicelib.exceptions as exceptions
 
 from pathlib import Path
 
@@ -25,9 +28,14 @@ class BeanController(controllers.Controller):
 
     This controller should be used for translation between
     certain data (AWS Chalice requests into beans).
+
+    For now, bean translator does not search other components
+    than DTO/domain classes. This could be adapted in future releases.
     """
 
+    # Maybe this could be parameterized as environment vars
     ROOT_PACKAGES = ["dto", "domain"]
+
     DOUBLE_UNDERSCORES = "__"
 
     @property
@@ -85,15 +93,20 @@ class BeanController(controllers.Controller):
         """
 
     @core.logger
-    def create_bean(self, request: Request):
+    def create_bean(self, request: Request) -> Union[object, None]:
         """
         Create a bean with AWS Chalice request.
 
         Firstly scans every available resource as model
         (DTO/domain classes existing in the template packages).
 
+        :raises exceptions.BeanNotFoundException: When no model associated with the data provided
+
         :param request: AWS Chalice request mapped
         :type request: chalice.app.Request
+
+        :return: The bean instantiated or null value if not models configured
+        :rtype: Union[object, None]
         """
 
         self.path_parameter_controller.process(request=request)
@@ -102,26 +115,34 @@ class BeanController(controllers.Controller):
 
         path_parameters = self.path_parameter_controller.parameters
         query_parameters = self.query_parameter_controller.parameters
+
+        # Body is a rare case, this one should be studied carefully when doing inspection
+        # If body is in JSON format (dict) just add it as standard parameters
+
+        body_parameters = self.body_controller.parameters
+
         global_parameters = {**path_parameters, **query_parameters}
 
+        if isinstance(body_parameters, dict):
+            global_parameters = {**global_parameters, **body_parameters}
+            body_parameters = list()
+
         for model in self.ROOT_PACKAGES:
-            class_ = self.inspect_model(
+            bean = self.inspect_model(
                 domain_package=Path(__file__).parent / model,
-                parameters={**path_parameters, **query_parameters},
+                simple_parameters=global_parameters,
+                complex_parameters=body_parameters,
             )
 
-            if class_:
-                break
-
-        self.reset()
-        return class_(**global_parameters)
+            return bean
 
     @classmethod
     def inspect_model(
         cls,
         model_package: str,
         table_name: str = None,
-        parameters: Dict[str, str] = dict(),
+        simple_parameters: Dict[str, Any] = dict(),
+        complex_parameters: List[Any] = list(),
     ) -> type:
         """
         Main method for getting domain model classes (or other types if so)
@@ -134,29 +155,42 @@ class BeanController(controllers.Controller):
 
         :param table_name: Table name in domain package
         :type table_name: str
+
+        :param simple_parameters: Raw dictionary obtained from request, defaults to dict()
+        :type simple_parameters: Dict[str, Any], optional
+
+        :param complex_parameters: Special attributes we need to take care of, defaults to list()
+        :type complex_parameters: List[Any], optional
+
+        :raises exceptions.BeanNotFoundException: When no model associated with the data provided
+
         :return: Custom class instance (with inheritance or not)
         :rtype: type
         """
 
-        model_package_module = cls.import_package(model_package)
+        model_package_module = cls.__import_package(model_package)
 
-        """
         for module in dir(model_package_module):
-            if not module.startswith(DOUBLE_UNDERSCORES):
+            if not module.startswith(cls.DOUBLE_UNDERSCORES):
                 class_ = getattr(model_package_module, module)
-                if (
-                    inspect.isclass(class_)
-                    and hasattr(class_, class_property)
-                    and getattr(class_, class_property) == table_name
-                ):
-                    return class_
-        """
 
-        # Should be managed externally
-        raise Exception()
+                if not inspect.isclass(class_):
+                    # Passing here of no class "format"
+                    # (bean supposed to be a class type)
+
+                    continue
+
+                bean = cls.__check_type(class_)
+
+                if bean:
+                    return bean
+
+        raise exceptions.BeanNotFoundException(
+            "Could not instantiate binded bean"
+        )
 
     @staticmethod
-    def import_package(name):
+    def __import_package(name):
         """
         Loads dynamically some specific package/subpackage.
 
@@ -171,3 +205,25 @@ class BeanController(controllers.Controller):
         for comp in components[1:]:
             mod = getattr(mod, comp)
         return mod
+
+    @classmethod
+    def __check_type(cls, class_):
+        if issubclass(class_, BaseModel):
+
+            # Knowing it's a DTO model class type
+            bean = cls.__inspect_pydantic(class_)
+
+        if bean:
+            return bean
+
+    @staticmethod
+    def __inspect_pydantic(
+        class_, standard_attributes, special_attributes
+    ) -> bool:
+        try:
+            class_(**standard_attributes)
+        except ValidationError:
+            # Some of the attributes does not match with the model
+            return False
+
+        return True

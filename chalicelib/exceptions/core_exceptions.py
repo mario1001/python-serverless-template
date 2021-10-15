@@ -36,3 +36,12 @@ class DependencyInjectionException(Exception):
     Basically raised when trying to inject some component
     not registered in the context application.
     """
+
+
+class BeanNotFoundException(Exception):
+    """
+    Bean not found exception class reference.
+
+    Raised when using a bean translator for searching
+    application components and process has not successful result.
+    """
