@@ -31,6 +31,14 @@ class BeanController(controllers.Controller):
 
     For now, bean translator does not search other components
     than DTO/domain classes. This could be adapted in future releases.
+
+    Also mentioning here that it's specially for searching
+    classes with attributes definition and declaration
+    (specially with DTO layer), not using the class properties/attributes
+    for standard domain checks for example.
+
+    Any new bean controller should override this class along with
+    public method implementations.
     """
 
     # Maybe this could be parameterized as environment vars
@@ -174,13 +182,17 @@ class BeanController(controllers.Controller):
             if not module.startswith(cls.DOUBLE_UNDERSCORES):
                 class_ = getattr(model_package_module, module)
 
-                if not inspect.isclass(class_):
+                if not inspect.isclass(
+                    class_, simple_parameters, complex_parameters
+                ):
                     # Passing here of no class "format"
                     # (bean supposed to be a class type)
 
                     continue
 
-                bean = cls.__check_type(class_)
+                bean = cls.__check_type(
+                    class_, simple_parameters, complex_parameters, table_name
+                )
 
                 if bean:
                     return bean
@@ -207,23 +219,160 @@ class BeanController(controllers.Controller):
         return mod
 
     @classmethod
-    def __check_type(cls, class_):
+    def __check_type(
+        cls, class_, standard_parameters, special_parameters, table_name
+    ):
         if issubclass(class_, BaseModel):
 
-            # Knowing it's a DTO model class type
-            bean = cls.__inspect_pydantic(class_)
+            # Knowing it's a DTO pydantic model class type
+            bean = cls.__inspect_pydantic(
+                class_, standard_parameters, special_parameters, table_name
+            )
+
+        if not bean:
+
+            # Should consider domain generic models here
+            bean = cls.inspect_domain(
+                class_, standard_parameters, special_parameters, table_name
+            )
 
         if bean:
             return bean
 
     @staticmethod
     def __inspect_pydantic(
-        class_, standard_attributes, special_attributes
-    ) -> bool:
+        class_: BaseModel,
+        standard_attributes: dict,
+        special_attributes: list,
+        table_name: str = None,
+    ) -> Union[BaseModel, None]:
+        """
+        Specific inspection method for pydantic distributions.
+
+        Components should inherit from one main pydantic class
+        called: BaseModel. Also would check the special types
+        (for now only checking list attributes in schema defined)
+
+        One of the pydantic model restrictions is the default contructor
+        by using a full creation with attributes (you can use optional for
+        the not strict ones of course) at last option, you can always define another
+        __init__ constructor or builder method if really needed
+        (even though pydantic is not designed for that).
+
+        :param class_: class to study for instance creation
+        :type class_: BaseModel
+
+        :param standard_attributes: Dictionary with attributes inside
+        :type standard_attributes: dict
+
+        :param special_attributes: Special types to check and study
+        :type special_attributes: list
+
+        :return: The DTO model instance returned (or none value if
+        requirements not accurated) and saved in context
+        :rtype: Union[BaseModel, None]
+        """
+
         try:
-            class_(**standard_attributes)
+
+            # Inspect attributes for checking the special ones (lists and so on)
+            # If having several special values, maybe a class should reimplement this
+
+            table_found = False
+            for attribute, schema in class_.__fields__.items():
+
+                if table_name and schema.default == table_name:
+                    table_found = True
+
+                if isinstance(special_attributes, list) and (
+                    schema.outer_type_ == List or schema.outer_type_ == list
+                ):
+                    standard_attributes[attribute] = special_attributes
+                    break
+
+            if not table_name or (table_name and table_found):
+                return class_(**standard_attributes)
         except ValidationError:
             # Some of the attributes does not match with the model
-            return False
+            return
 
-        return True
+    def inspect_domain(
+        self, class_, standard_attributes, special_attributes, table_name=None
+    ) -> Union[object, None]:
+        """
+        Standard way for creating custom domain instances.
+
+        What means a custom domain instance? It's just a class
+        defined in the template (in the inspection packages) which
+        represents different type of model (E.g. SQLAlchemy, MongoDB, DynamoDB...)
+
+        It's a default implementation, but you could extend this functionality
+        or changed it the way the bean is created, just as you want. This method
+        is public because that specifically reason.
+
+        :param class_: Specific class found to inspect
+        :type class_: object
+
+        :param standard_attributes: Data to provided for creating the instance
+        :type standard_attributes: dict
+
+        :param special_attributes: Some special information to use as data
+        :type special_attributes: list
+
+        :return: Instance created and saving in the context
+        :rtype: Union[object, None]
+        """
+
+        try:
+
+            # Depending on the model here, should check first the constructor
+            # __init__ method, if no specified we can create the object with some
+            # parameters and then poblate the special ones,
+
+            if "__init__" in vars(class_):
+
+                # In the other case, constructor is present on the bean class, just
+                # provide everything as data.
+
+                bean = class_(
+                    **{
+                        **standard_attributes,
+                        **{
+                            attribute: special_attributes
+                            for attribute in inspect.signature(
+                                class_.__init__
+                            ).parameters
+                            if attribute not in standard_attributes
+                        },
+                    }
+                )
+
+                valid_instance = None
+                for attribute in vars(bean):
+                    if attribute == table_name:
+                        valid_instance = bean
+                        break
+
+                return valid_instance
+
+            bean = class_(**standard_attributes)
+
+            # Just iterate over the domain for searching a field like for special values
+            valid_instance = None
+            for attribute in vars(bean):
+
+                if (
+                    table_name
+                    and attribute == table_name
+                    and valid_instance is None
+                ):
+                    valid_instance = bean
+
+                if getattr(bean, attribute) is None and special_attributes:
+                    setattr(bean, attribute, special_attributes)
+                    special_attributes = None
+
+            return valid_instance
+        except TypeError:
+            # Some of the attributes does not match with the model
+            return

@@ -36,6 +36,7 @@ def initialize_context():
 
     core.context_class = ContextABC
 
+
 def save_request(request: Request):
     core.ApplicationContext.application_context.request = request
 
@@ -44,4 +45,4 @@ initialize_context()
 
 # Add the router components (little pieces of domain handler routers)
 
-from chalicelib.handlers import colors, users
+from chalicelib.handlers import users

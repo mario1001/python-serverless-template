@@ -41,7 +41,7 @@ There's certain concepts you need to know before exploring this template:
         <li><a href="#core">Core explanation</a></li>
       </ul>
     </li>
-    <li><a href="#contact">Authors</a></li>
+    <li><a href="#authors">Authors</a></li>
   </ol>
 </details>
 <br />
@@ -176,12 +176,6 @@ There are two API Gateway endpoints services here:
   * /users/{id} GET (being id an integer ID)
   * /users POST
   * /users PUT
-* Colors handler (A beta one for showing the template business logic movements):
-  * /colors GET 
-  * /colors/{id} GET (being id an integer ID)
-  * /colors POST
-  * /colors PUT
-  * /colors DELETE
 
 There's other feature commands (for creating base projects or deployment for example) but won't be used in this project for now. Deployment would be without the command line tool (that task corresponds to infrastructure).
 
@@ -200,7 +194,7 @@ This section is reserved for the core functionality, we have several decorators 
 
 ¿How to register classes? Just put a *register* decorator in the constructor (__init__ method of the class). Also for core to detect it, you will need to extend/inherit from a special core class (called ContextABC). Injection decorators would provide instances registered by keys any time you would use the inject command (register goes straight for the inject).
 
-At last but not at least, another important thing to mention here is that core injection is provided on two sides: A class property called **instance** will be created on the reference provided (ref parameter in inject decorator) and also will put the bean in an attribute (could perfectly be a property declared) named as the reference passed in the place using the decorator (class or module injecting the bean).
+At last but not at least, another important thing to mention here is that core injection is provided on two sides: A class property called **instance** will be created on the reference provided (ref parameter in inject decorator) and also will put the bean in an attribute (could perfectly be a property declared) named as the reference passed in the place using the decorator (class or module which injects the bean).
 
 E.g. Having a class with name *ColorService*, injecting a bean of reference *ColorRepository* in a property called color_repository (snake case always to be pythonic).
 
@@ -249,7 +243,7 @@ def mock_client():
     yield client
 ```
 
-It's probably the ridiculous thing you has seen in programming, but template projects would work
+Maybe it's probably the ridiculous thing you have seen in programming, but template projects would work
 this way when having dependency injections in our original code. ORDER real matters for tests.
 
 The same goes for the following syntax:
