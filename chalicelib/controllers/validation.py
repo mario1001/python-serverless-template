@@ -66,6 +66,7 @@ class ParameterController(controllers.ProcessingController):
         Creates a parameter controller instance to be used.
         """
 
+        super().__init__()
         self.parameters = dict()
 
     def process(

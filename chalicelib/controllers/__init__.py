@@ -28,7 +28,9 @@ from abc import ABC, abstractmethod
 import chalicelib.core as core
 
 
-class Controller(ABC, metaclass=core.context_class):
+class Controller(
+    ABC, metaclass=core.ApplicationContext.application_context.injection_class
+):
     """
     Abstract controller interface reference.
 
@@ -49,6 +51,24 @@ class ProcessingController(Controller):
     :param Controller: [description]
     :type Controller: [type]
     """
+
+    @property
+    def result(self) -> object:
+        """
+        Property for getting the process result.
+
+        :return: The result of that processing action (if so)
+        :rtype: object
+        """
+
+        return self.__result
+
+    @result.setter
+    def result(self, value):
+        self.__result = value
+
+    def __init__(self) -> None:
+        self.result = None
 
     @abstractmethod
     def process(self):

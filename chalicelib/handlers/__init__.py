@@ -1,44 +1,46 @@
 # Created in June 15, 2021 by Mario Benito.
 #
-# Despite this software is developed by Neoris, it belongs to Santillana,
-# either first version of the License, or (at your option) any later version.
+# Free Software design purposes at any version of this repository.
 
 """
-PRIDIG template handler layer.
+Python Serverless template handler layer.
 
 Represents and contains the router functions mapped
-with specific urls/endpoints. These ones would call
-dispatcher logic along with controllers.
+with specific urls/endpoints.
+
+Also supports some common functionalities
+for the specific handlers (core related issues).
 """
 
 
-from abc import ABCMeta
-
 import chalicelib.core as core
-from chalice.app import Request
+from chalice import Chalice
 
 
 @core.ApplicationContext
 def initialize_context():
     """
     Main function for initializing application context
+
+    Called when application raises, so it does not need
+    to be requested anymore (already prepared in this module).
     """
 
-    class ContextABC(
-        ABCMeta, core.ApplicationContext.application_context.registering_type
-    ):
-        """
-        Base Abstract class with context beans implementation.
 
-        Every new layer feature to inject should
-        have this metaclass (as declaration).
-        """
+def process_request(router: Chalice):
+    """
+    Main function for saving AWS Chalice request
+    in the application context.
 
-    core.context_class = ContextABC
+    You should use this one if you want context registration
+    and configuration for next steps (custom components studying
+    the request).
 
+    :param router: Chalice application
+    :type router: Chalice
+    """
 
-def save_request(request: Request):
-    core.ApplicationContext.application_context.request = request
+    core.ApplicationContext.application_context.request = router.current_request
 
 
 initialize_context()

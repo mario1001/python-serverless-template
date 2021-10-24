@@ -33,9 +33,8 @@ def index():
 
 @core.logger
 @router.route("/users", methods=["GET"])
+@handlers.process_request(router)
 def list_users():
-
-    handlers.save_request(router.current_request)
 
     print(router.current_request.to_dict())
 
@@ -47,8 +46,9 @@ def list_users():
 
 @core.logger
 @router.route("/users", methods=["POST", "PUT"])
+@handlers.process_request(router)
 def create_user():
-    handlers.save_request(router.current_request)
+
     body = router.current_request.json_body
 
     print(body)
@@ -61,9 +61,8 @@ def create_user():
 
 @core.logger
 @router.route("/users/{uid}", methods=["GET"])
+@handlers.process_request(router)
 def get_user(uid):
-
-    handlers.save_request(router.current_request)
 
     print(router.current_request.to_dict())
     print(uid)
@@ -76,9 +75,8 @@ def get_user(uid):
 
 @core.logger
 @router.route("/users/{uid}", methods=["DELETE"])
+@handlers.process_request(router)
 def delete_user(uid):
-
-    handlers.save_request(router.current_request)
 
     print(router.current_request.to_dict())
     print(uid)

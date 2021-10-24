@@ -17,16 +17,19 @@ By components, we mean the following ones: controllers, services and repositorie
 """
 
 from __future__ import annotations
+from abc import ABCMeta
 
-from typing import Dict
+from typing import Dict, List, Tuple
 
+import chalicelib.controllers as controllers
 import chalicelib.core as core
 import chalicelib.exceptions as exceptions
 import chalicelib.logs as logs
 from aws_resources.exceptions import http_exceptions
+from chalice.app import Request
 
 
-class ApplicationContext(object):
+class ApplicationContext(metaclass=core.singleton.SingletonMeta):
     """
     Application context class reference.
 
@@ -48,32 +51,59 @@ class ApplicationContext(object):
     fresh freedom).
     """
 
+    @property
+    def invocated_function(self):
+        return self.__invocated_function
+
+    @invocated_function.setter
+    def invocated_function(self, value):
+        self.__invocated_function = value
+
+    @property
+    def requests(
+        self,
+    ) -> Dict[Tuple[function, Request], List[controllers.Controller]]:
+        return self.__requests
+
+    @requests.setter
+    def request(self, value: Request):
+        """Property for populating a AWS Chalice request.
+
+        Not only saving the request, also active the core configuration system.
+        Just setting up controllers for defining the beans within that saved request.
+
+        :param value: AWS Chalice request to be stored
+        :type value: chalice.app.Request
+        """
+
+        self.__requests[value] = self.inject_components(value)
+
+    def inject_components(self, request: Request) -> List[object]:
+        """
+        Inject the component management controller instance
+        for processing a request.
+
+        :param value: AWS Chalice request causing the component injection
+        :type value: chalice.app.Request
+
+        :return: List of results obtained from management controller
+        :rtype: List[object]
+        """
+
+        return list()
+
     @core.classproperty
     def application_context(cls) -> ApplicationContext:
 
-        if not hasattr(cls, "application_context"):
-            cls.application_context = None
+        context = None
+        if not hasattr(cls, f"{context=}".split("=")[0]):
+            cls.context = None
 
-        return cls.application_context
-
-    # Saving here the function that started the
-    # context (also with chalice request)
+        return cls.context
 
     @property
-    def function(self):
-        return self.__function
-
-    @function.setter
-    def function(self, value):
-        self.__function = value
-
-    @property
-    def request(self):
-        return self.__request
-
-    @request.setter
-    def request(self, value):
-        self.__request = value
+    def injection_class(self):
+        return self.__injection_class
 
     # Active beans living and registered in context
     # There's a busy mechanism for searches with specific injection
@@ -103,8 +133,9 @@ class ApplicationContext(object):
     def registering_type(self, value):
         self.__registering_type = value
 
-    def __init__(self, function) -> None:
-        self.function = function
+    def __init__(self, invocated_function) -> None:
+        self.invocated_function = invocated_function
+        self.__requests = dict()
 
         self.registry = {}
 
@@ -119,19 +150,27 @@ class ApplicationContext(object):
                     if properties is not None:
                         self.registry["%s.%s" % (name, key)] = properties
 
-        self.registering_type = RegisteringType
+        class Component(ABCMeta, RegisteringType):
+            """
+            Base Abstract class with context beans implementation.
+
+            Every new layer feature to inject should
+            have this metaclass (as declaration).
+            """
+
+        self.__injection_class = Component
         self.active_beans = dict()
 
     def __call__(self, *args, **kwargs):
 
-        # Request Service initialization (initial load for next operations)
+        # Request Service initialization (initial load for next operations before handler execution)
         # If other resources need to be initialized before business logic goes, here they should be
 
         # Core context would rise up when running the application
-        ApplicationContext.application_context = self
+        ApplicationContext.context = self
 
         # Run specific handler function (for validation or check filters whatever)
-        return self.function(*args, **kwargs)
+        return self.invocated_function(*args, **kwargs)
 
     def __create_bean(self, reference, values, injection_name, key):
         try:

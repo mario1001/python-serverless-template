@@ -12,10 +12,7 @@ Application context could be imported with inner modules,
 but this module would not provide the instance to work with (not user-side)
 """
 
-from chalicelib.core.decorators import classproperty, inject, logger, register
+import chalicelib.core.singleton as singleton
 from chalicelib.core.connections import ClientPool
 from chalicelib.core.context import ApplicationContext
-
-# Context class would be setup with lambda rising
-
-context_class = None
+from chalicelib.core.decorators import classproperty, inject, logger, register
