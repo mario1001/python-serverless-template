@@ -21,7 +21,6 @@ from abc import ABCMeta
 
 from typing import Dict, List, Tuple
 
-import chalicelib.controllers as controllers
 import chalicelib.core as core
 import chalicelib.exceptions as exceptions
 import chalicelib.logs as logs
@@ -90,7 +89,15 @@ class ApplicationContext(metaclass=core.singleton.SingletonMeta):
         :rtype: List[object]
         """
 
-        return list()
+        import chalicelib.controllers as controllers
+
+        core.inject(ref=controllers.management.ComponentManagementController)
+        management_controller: controllers.management.ComponentManagementController = (
+            controllers.management.ComponentManagementController.instance
+        )
+        management_controller.process(request)
+
+        return management_controller.result
 
     @core.classproperty
     def application_context(cls) -> ApplicationContext:

@@ -7,7 +7,7 @@ Python Serverless template decorators to work with.
 
 User-friendly decorators for this template
 dependency injections, automatic logs or class
-properties as main functionality.
+properties as main functionality for now.
 """
 
 import re

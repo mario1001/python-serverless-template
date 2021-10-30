@@ -14,8 +14,10 @@ the software design pattern composition.
 """
 
 from typing import List
-import chalicelib.controllers as controllers
 
+import chalicelib.controllers as controllers
+import chalicelib.core as core
+import chalicelib.logs as logs
 from chalice.app import Request
 
 
@@ -31,13 +33,21 @@ class ComponentManagementController(controllers.ProcessingController):
     """
 
     @property
+    def bean_controller(
+        self,
+    ) -> controllers.translator.BeanController:
+        return self.__bean_controller
+
+    @bean_controller.setter
+    def bean_controller(self, value):
+        self.__bean_controller = value
+
+    @property
     def components(self) -> List[controllers.ProcessingController]:
         return self.__components
 
-    @property
-    def results(self) -> List[object]:
-        return self.__results
-
+    @core.register("manager")
+    @core.inject(ref=controllers.translator.BeanController)
     def __init__(self) -> None:
         """
         Creates a component controller instance.
@@ -49,8 +59,13 @@ class ComponentManagementController(controllers.ProcessingController):
         AWS Chalice request introduced.
         """
 
+        super().__init__()
+
         self.__components = list()
-        self.__results = list()
+        for component in vars(self).values():
+            self.components.append(component)
+
+        self.result = list()
 
     def process(self, request: Request) -> None:
         """
@@ -58,9 +73,19 @@ class ComponentManagementController(controllers.ProcessingController):
         """
 
         for component in self.components:
+            if not isinstance(component, controllers.ProcessingController):
+                continue
+
             try:
                 component.process(request)
                 if component.result:
-                    self.__results.append(component.result)
-            except Exception:
-                pass
+                    self.result.append(component.result)
+            except Exception as exception:
+                logs.system_logger.log(
+                    "error",
+                    "[{MODULE}][{FUNCTION}]: ".format(
+                        MODULE=__name__, FUNCTION=self.process.__name__
+                    )
+                    + "Specific exception when processing component "
+                    + f"{component.__class__.__name__}: {exception}",
+                )

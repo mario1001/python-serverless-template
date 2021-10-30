@@ -14,5 +14,5 @@ but this module would not provide the instance to work with (not user-side)
 
 import chalicelib.core.singleton as singleton
 from chalicelib.core.connections import ClientPool
-from chalicelib.core.context import ApplicationContext
 from chalicelib.core.decorators import classproperty, inject, logger, register
+from chalicelib.core.context import ApplicationContext

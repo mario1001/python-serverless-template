@@ -40,7 +40,16 @@ def process_request(router: Chalice):
     :type router: Chalice
     """
 
-    core.ApplicationContext.application_context.request = router.current_request
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            core.ApplicationContext.application_context.request = (
+                router.current_request
+            )
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 initialize_context()

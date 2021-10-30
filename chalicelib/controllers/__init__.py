@@ -82,3 +82,4 @@ class ProcessingController(Controller):
 import chalicelib.controllers.security as security
 import chalicelib.controllers.validation as validation
 import chalicelib.controllers.translator as translator
+import chalicelib.controllers.management as management

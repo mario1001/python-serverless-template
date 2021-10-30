@@ -76,6 +76,7 @@ class BeanController(controllers.Controller):
     def body_controller(self, value):
         self.__body_controller = value
 
+    @core.register("chalice", "beans")
     @core.inject(ref=controllers.validation.PathParameterController)
     @core.inject(ref=controllers.validation.QueryParameterController)
     @core.inject(ref=controllers.validation.BodyController)

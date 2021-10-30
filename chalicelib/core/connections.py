@@ -106,13 +106,13 @@ class ClientPool(object):
 
     DEFAULT_OPERATIONS = ["SELECT", "INSERT", "UPDATE", "DELETE"]
 
-    @core.classproperty
+    """@core.classproperty
     def client_pool(cls) -> ClientPool:
 
         if not hasattr(cls, "pool"):
             cls.pool = ClientPool()
 
-        return cls.pool
+        return cls.pool"""
 
     @property
     def clients(self) -> List[DatabaseClient]:
