@@ -92,7 +92,9 @@ When installing the chalice package, it would give you also the chalice command 
 
 ## Running tests
 
-This project contains different type of tests: here we have unit testing, integration testing (more like mocked endpoint integration tests) and some organized data examples with pytest fixtures.
+This project contains different type of tests: unit tests and integration tests. Please make sure that you
+use a in-memory database for integration testing or the default option with temporary database provided by
+pifpaf module before executing the tests with pytest command.
 
 To install Pytest use this:
 
