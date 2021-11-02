@@ -13,3 +13,4 @@ base_path = Path(__file__).parent.parent / "events"
 
 
 EVENT_GET_USER_BY_ID = read_event(base_path / "event_get_user_by_id.json")
+EVENT_GET_USERS_QUERY = read_event(base_path / "event_get_users_query.json")

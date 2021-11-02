@@ -11,7 +11,7 @@ def test_parameter_controller_empty():
     assert parameter_controller.parameters == {}
 
 
-def test_parameter_controller_process():
+def test_parameter_controller_process_empty():
 
     parameter_controller = validation.ParameterController()
     parameter_controller.process(
@@ -23,3 +23,52 @@ def test_parameter_controller_process():
     assert len(parameters) == 1
     assert isinstance(list(parameters.keys())[0], data.requests.app.Request)
     assert not list(parameters.values())[0]
+
+
+def test_parameter_controller_process_simple_dictionary():
+
+    parameter_controller = validation.ParameterController()
+    parameter_controller.process(
+        request=data.requests.request_user_id, parameters={"test": 12}
+    )
+
+    parameters = parameter_controller.parameters
+    assert parameters
+    assert len(parameters) == 1
+    assert isinstance(list(parameters.keys())[0], data.requests.app.Request)
+    assert parameters[data.requests.request_user_id] == {"test": 12}
+
+
+def test_path_parameter_process():
+
+    parameter_controller = validation.PathParameterController()
+    parameter_controller.process(request=data.requests.request_user_id)
+
+    parameters = parameter_controller.parameters
+
+    assert parameters
+    assert len(parameters) == 1
+    assert isinstance(list(parameters.keys())[0], data.requests.app.Request)
+
+    # For now, there is no conversion for string values obtained from Gateway event
+    # This would be done within bean controller composition DTO process
+
+    assert parameters[data.requests.request_user_id] == {"id": "3"}
+
+
+def test_query_parameter_process():
+
+    parameter_controller = validation.QueryParameterController()
+    parameter_controller.process(request=data.requests.request_users)
+
+    parameters = parameter_controller.parameters
+
+    assert parameters
+    assert len(parameters) == 1
+    assert isinstance(list(parameters.keys())[0], data.requests.app.Request)
+
+    assert parameters[data.requests.request_users] == {
+        "id_recurso": "2",
+        "precio": "66",
+        "top_height": "10.5",
+    }

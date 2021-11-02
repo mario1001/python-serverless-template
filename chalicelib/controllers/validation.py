@@ -19,7 +19,7 @@ import chalicelib.controllers as controllers
 
 from aws_resources.exceptions.http_exceptions import BadRequestException
 
-from chalice.app import Request, BadRequestError
+from chalice.app import MultiDict, Request, BadRequestError
 from chalicelib.dto.responses import ResponsePagination
 
 
@@ -102,6 +102,15 @@ class ParameterController(controllers.ProcessingController):
 
         parameters_to_save = dict()
         for name, value in parameters.items():
+
+            if (
+                isinstance(parameters, MultiDict)
+                and "".join(parameters.getlist(name)) != value
+            ):
+                # Sometimes we need to retrieve the full value in case of strings
+                # Just check the overall value and if not the same, just update the var
+
+                value = "".join(parameters.getlist(name))
 
             if pythonic:
                 name = self.camel_case_to_snake_case(name)
