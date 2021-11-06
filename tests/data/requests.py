@@ -5,3 +5,7 @@ TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOjIsImlzcyI6Imh0dHBzOi8vZG
 
 request_user_id = app.Request(event_dict=data.events.EVENT_GET_USER_BY_ID)
 request_users = app.Request(event_dict=data.events.EVENT_GET_USERS_QUERY)
+request_users_body = app.Request(event_dict=data.events.EVENT_POST_USERS_CREATE)
+request_malformed = app.Request(
+    event_dict=data.events.EVENT_POST_USERS_CREATE_MALFORMED
+)

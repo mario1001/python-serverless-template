@@ -1,5 +1,6 @@
+import aws_resources.exceptions as exceptions
 import chalicelib.controllers.validation as validation
-
+import pytest
 import tests.data as data
 
 
@@ -72,3 +73,54 @@ def test_query_parameter_process():
         "precio": "66",
         "top_height": "10.5",
     }
+
+
+def test_query_parameter_process_no_pythonic():
+
+    parameter_controller = validation.QueryParameterController()
+    parameter_controller.process(
+        request=data.requests.request_users, pythonic=False
+    )
+
+    parameters = parameter_controller.parameters
+
+    assert parameters
+    assert len(parameters) == 1
+    assert isinstance(list(parameters.keys())[0], data.requests.app.Request)
+
+    assert parameters[data.requests.request_users] == {
+        "idRecurso": "2",
+        "precio": "66",
+        "top_height": "10.5",
+    }
+
+
+def test_body_parameter_process():
+
+    parameter_controller = validation.BodyController()
+    parameter_controller.process(request=data.requests.request_users_body)
+
+    parameters = parameter_controller.parameters
+
+    assert parameters
+    assert len(parameters) == 1
+    assert isinstance(list(parameters.keys())[0], data.requests.app.Request)
+
+    assert parameters[data.requests.request_users_body] == {
+        "username": "admin",
+        "password": "admin",
+    }
+
+
+def test_body_parameter_process_no_json():
+
+    parameter_controller = validation.BodyController()
+    parameter_controller.process(request=data.requests.request_malformed)
+
+    parameters = parameter_controller.parameters
+
+    assert parameters
+    assert len(parameters) == 1
+    assert isinstance(list(parameters.keys())[0], data.requests.app.Request)
+
+    assert parameters[data.requests.request_malformed] == ["abc1234"]

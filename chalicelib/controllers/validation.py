@@ -256,6 +256,9 @@ class BodyController(ParameterController):
         """
         Main method for processing the AWS Chalice request.
 
+        When having other type on body request (no JSON or list), passing
+        that value on a list as a request for the parameter controller.
+
         :param request: original AWS Chalice request
         :type request: Request
 
@@ -267,10 +270,18 @@ class BodyController(ParameterController):
         """
 
         try:
+
+            # JSON cases would be fine with this
             body = request.json_body
         except BadRequestError:
-            raise BadRequestException(
-                error_message="There is an error in body of HTTP request"
+
+            # Body is not in JSON format
+            # Just save it in a list for super calls
+
+            return super().process(
+                request=request,
+                parameters=[request._body],
+                pythonic=pythonic,
             )
 
         # Request body seems to be in the good Python format we want
