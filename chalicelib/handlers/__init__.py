@@ -36,6 +36,9 @@ def process_request(router: Chalice):
     and configuration for next steps (custom components studying
     the request).
 
+    Configuration components should be an optional flag
+    in this functionality (it's executing always right now).
+
     :param router: Chalice application
     :type router: Chalice
     """

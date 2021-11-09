@@ -30,6 +30,10 @@ class ComponentManagementController(controllers.ProcessingController):
 
     Using the composite design pattern on other controllers. It's just
     a controller for processing assigned controllers from context requests.
+
+    This does not mean that processing controllers could not use service layer
+    for processing some information (inserting freedom programmatically
+    along the framework definition).
     """
 
     @property

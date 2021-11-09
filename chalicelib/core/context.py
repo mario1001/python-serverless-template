@@ -61,7 +61,7 @@ class ApplicationContext(metaclass=core.singleton.SingletonMeta):
     @property
     def requests(
         self,
-    ) -> Dict[Tuple[function, Request], List[controllers.Controller]]:
+    ) -> Dict[Request, List[object]]:
         return self.__requests
 
     @requests.setter
@@ -81,6 +81,12 @@ class ApplicationContext(metaclass=core.singleton.SingletonMeta):
         """
         Inject the component management controller instance
         for processing a request.
+
+        Components are collected and raised just for next step purposes. Maybe
+        some services need to be initialized (in case of some services there is that way).
+
+        Adding so many components could cause performance
+        issues for your serverless environment.
 
         :param value: AWS Chalice request causing the component injection
         :type value: chalice.app.Request

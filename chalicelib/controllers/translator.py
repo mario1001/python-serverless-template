@@ -122,17 +122,17 @@ class BeanController(controllers.Controller):
         self.query_parameter_controller.process(request=request)
         self.body_controller.process(request=request)
 
-        path_parameters = self.path_parameter_controller.parameters.get(
+        path_parameters = self.path_parameter_controller.requests.get(
             request, dict()
         )
-        query_parameters = self.query_parameter_controller.parameters.get(
+        query_parameters = self.query_parameter_controller.requests.get(
             request, dict()
         )
 
         # Body is a rare case, this one should be studied carefully when doing inspection
         # If body is in JSON format (dict) just add it as standard parameters
 
-        body_parameters = self.body_controller.parameters.get(request, list())
+        body_parameters = self.body_controller.requests.get(request, list())
 
         global_parameters = {**path_parameters, **query_parameters}
 

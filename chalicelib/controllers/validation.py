@@ -59,7 +59,7 @@ class ParameterController(controllers.ProcessingController):
         :rtype: chalice.app.Request
         """
 
-        return self.parameters.keys()[-1]
+        return self.requests.keys()[-1]
 
     def __init__(self) -> None:
         """
@@ -67,7 +67,7 @@ class ParameterController(controllers.ProcessingController):
         """
 
         super().__init__()
-        self.parameters = dict()
+        self.requests = dict()
 
     def process(
         self,
@@ -94,7 +94,7 @@ class ParameterController(controllers.ProcessingController):
         if isinstance(parameters, list):
             # Having a list with easy types or not (could be dictionary or internal lists)
 
-            self.parameters[request] = parameters
+            self.requests[request] = parameters
             return
 
         # Standard case: A simple or complex dictionary
@@ -117,7 +117,7 @@ class ParameterController(controllers.ProcessingController):
 
             parameters_to_save[name] = value
 
-        self.parameters[request] = parameters_to_save
+        self.requests[request] = parameters_to_save
 
     @classmethod
     def camel_case_to_snake_case(cls, parameter):
@@ -149,7 +149,7 @@ class ParameterController(controllers.ProcessingController):
         :rtype: str
         """
 
-        return json.dumps(self.parameters)
+        return json.dumps(self.requests)
 
 
 class PathParameterController(ParameterController):

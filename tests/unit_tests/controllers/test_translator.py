@@ -37,3 +37,15 @@ def test_bean_controller_authentication_object():
 
     assert bean
     assert isinstance(bean, dto.AuthenticationPayload)
+
+    # You can also see that values are in the specific type (integer in this case)
+    # but coming from string format within AWS Gateway event
+
+    assert bean.dict() == {
+        "exp": 2,
+        "iat": 6,
+        "iss": "test",
+        "jti": "admin",
+        "nbf": 3,
+        "sub": 34,
+    }

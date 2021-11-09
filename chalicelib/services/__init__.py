@@ -9,13 +9,18 @@ Defines the different functions on service layer. Also
 here stays the interface for services (every service should
 inherit from that class to be injected).
 
-Also contains the shared values and instances used
-by service layer, along with the external interaction
-ones (as the main service for controller layer).
+A service must contain business logic operatives (which can differ
+from projects) but should remain as a service component definition
+with its interface (just as Spring does for example).
 """
 
+from abc import ABC
+import chalicelib.core as core
 
-from chalicelib.services.service import Service
-from chalicelib.services.main_service import MainService
 
-main_service: MainService = MainService()
+class Service(
+    ABC, metaclass=core.ApplicationContext.application_context.injection_class
+):
+    """
+    Abstract service interface reference.
+    """

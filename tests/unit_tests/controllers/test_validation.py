@@ -6,8 +6,8 @@ def test_parameter_controller_empty():
 
     parameter_controller = validation.ParameterController()
 
-    assert not parameter_controller.parameters
-    assert parameter_controller.parameters == {}
+    assert not parameter_controller.requests
+    assert parameter_controller.requests == {}
 
 
 def test_parameter_controller_process_empty():
@@ -17,7 +17,7 @@ def test_parameter_controller_process_empty():
         request=data.requests.request_user_id, parameters={}
     )
 
-    parameters = parameter_controller.parameters
+    parameters = parameter_controller.requests
     assert parameters
     assert len(parameters) == 1
     assert isinstance(list(parameters.keys())[0], data.requests.app.Request)
@@ -31,7 +31,7 @@ def test_parameter_controller_process_simple_dictionary():
         request=data.requests.request_user_id, parameters={"test": 12}
     )
 
-    parameters = parameter_controller.parameters
+    parameters = parameter_controller.requests
     assert parameters
     assert len(parameters) == 1
     assert isinstance(list(parameters.keys())[0], data.requests.app.Request)
@@ -43,7 +43,7 @@ def test_path_parameter_process():
     parameter_controller = validation.PathParameterController()
     parameter_controller.process(request=data.requests.request_user_id)
 
-    parameters = parameter_controller.parameters
+    parameters = parameter_controller.requests
 
     assert parameters
     assert len(parameters) == 1
@@ -60,7 +60,7 @@ def test_query_parameter_process():
     parameter_controller = validation.QueryParameterController()
     parameter_controller.process(request=data.requests.request_users)
 
-    parameters = parameter_controller.parameters
+    parameters = parameter_controller.requests
 
     assert parameters
     assert len(parameters) == 1
@@ -80,7 +80,7 @@ def test_query_parameter_process_no_pythonic():
         request=data.requests.request_users, pythonic=False
     )
 
-    parameters = parameter_controller.parameters
+    parameters = parameter_controller.requests
 
     assert parameters
     assert len(parameters) == 1
@@ -98,7 +98,7 @@ def test_body_parameter_process():
     parameter_controller = validation.BodyController()
     parameter_controller.process(request=data.requests.request_users_body)
 
-    parameters = parameter_controller.parameters
+    parameters = parameter_controller.requests
 
     assert parameters
     assert len(parameters) == 1
@@ -115,7 +115,7 @@ def test_body_parameter_process_no_json():
     parameter_controller = validation.BodyController()
     parameter_controller.process(request=data.requests.request_malformed)
 
-    parameters = parameter_controller.parameters
+    parameters = parameter_controller.requests
 
     assert parameters
     assert len(parameters) == 1

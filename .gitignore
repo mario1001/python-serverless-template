@@ -44,3 +44,7 @@ docs/
 .chalice/deployed/
 .chalice/venv/
 /htmlcov/
+
+
+# XML coverage files
+coverage.xml
