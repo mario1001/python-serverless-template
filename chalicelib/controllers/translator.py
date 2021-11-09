@@ -42,7 +42,7 @@ class BeanController(controllers.Controller):
     """
 
     # Maybe this could be parameterized as environment vars
-    ROOT_PACKAGES = ["dto", "domain"]
+    ROOT_PACKAGES = ["chalicelib.dto", "chalicelib.domain"]
 
     DOUBLE_UNDERSCORES = "__"
 
@@ -122,13 +122,17 @@ class BeanController(controllers.Controller):
         self.query_parameter_controller.process(request=request)
         self.body_controller.process(request=request)
 
-        path_parameters = self.path_parameter_controller.parameters
-        query_parameters = self.query_parameter_controller.parameters
+        path_parameters = self.path_parameter_controller.parameters.get(
+            request, dict()
+        )
+        query_parameters = self.query_parameter_controller.parameters.get(
+            request, dict()
+        )
 
         # Body is a rare case, this one should be studied carefully when doing inspection
         # If body is in JSON format (dict) just add it as standard parameters
 
-        body_parameters = self.body_controller.parameters
+        body_parameters = self.body_controller.parameters.get(request, list())
 
         global_parameters = {**path_parameters, **query_parameters}
 
@@ -138,12 +142,17 @@ class BeanController(controllers.Controller):
 
         for model in self.ROOT_PACKAGES:
             bean = self.inspect_model(
-                domain_package=Path(__file__).parent / model,
+                model_package=model,
                 simple_parameters=global_parameters,
                 complex_parameters=body_parameters,
             )
 
-            return bean
+            if bean:
+                return bean
+
+        raise exceptions.BeanNotFoundException(
+            "Could not instantiate a bean for that bind"
+        )
 
     @classmethod
     def inspect_model(
@@ -183,9 +192,7 @@ class BeanController(controllers.Controller):
             if not module.startswith(cls.DOUBLE_UNDERSCORES):
                 class_ = getattr(model_package_module, module)
 
-                if not inspect.isclass(
-                    class_, simple_parameters, complex_parameters
-                ):
+                if not inspect.isclass(class_):
                     # Passing here of no class "format"
                     # (bean supposed to be a class type)
 
@@ -197,10 +204,6 @@ class BeanController(controllers.Controller):
 
                 if bean:
                     return bean
-
-        raise exceptions.BeanNotFoundException(
-            "Could not instantiate binded bean"
-        )
 
     @staticmethod
     def __import_package(name):
@@ -223,6 +226,7 @@ class BeanController(controllers.Controller):
     def __check_type(
         cls, class_, standard_parameters, special_parameters, table_name
     ):
+        bean = None
         if issubclass(class_, BaseModel):
 
             # Knowing it's a DTO pydantic model class type
@@ -237,8 +241,7 @@ class BeanController(controllers.Controller):
                 class_, standard_parameters, special_parameters, table_name
             )
 
-        if bean:
-            return bean
+        return bean
 
     @staticmethod
     def __inspect_pydantic(

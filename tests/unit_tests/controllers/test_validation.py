@@ -1,6 +1,4 @@
-import aws_resources.exceptions as exceptions
 import chalicelib.controllers.validation as validation
-import pytest
 import tests.data as data
 
 

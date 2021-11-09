@@ -8,3 +8,5 @@ Python Serverless template DTO main module.
 Defines model shared between requests and responses modules.
 There's always certain models to be shared between diferent DTO's.
 """
+
+from chalicelib.dto.security import AuthenticationPayload

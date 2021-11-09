@@ -20,3 +20,5 @@ EVENT_POST_USERS_CREATE = read_event(base_path / "event_post_users_create.json")
 EVENT_POST_USERS_CREATE_MALFORMED = read_event(
     base_path / "event_post_users_body_no_json.json"
 )
+
+EVENT_TRANSLATOR = read_event(base_path / "event_translator_bean.json")

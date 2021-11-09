@@ -9,3 +9,4 @@ request_users_body = app.Request(event_dict=data.events.EVENT_POST_USERS_CREATE)
 request_malformed = app.Request(
     event_dict=data.events.EVENT_POST_USERS_CREATE_MALFORMED
 )
+request_authentication = app.Request(event_dict=data.events.EVENT_TRANSLATOR)
