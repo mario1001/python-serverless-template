@@ -45,7 +45,7 @@ def process_request(router: Chalice):
 
     def decorator(func):
         def wrapper(*args, **kwargs):
-            core.ApplicationContext.application_context.request = (
+            core.ApplicationContext.application_context.requests = (
                 router.current_request
             )
             return func(*args, **kwargs)

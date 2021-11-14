@@ -19,7 +19,7 @@ By components, we mean the following ones: controllers, services and repositorie
 from __future__ import annotations
 from abc import ABCMeta
 
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import chalicelib.core as core
 import chalicelib.exceptions as exceptions
@@ -65,7 +65,7 @@ class ApplicationContext(metaclass=core.singleton.SingletonMeta):
         return self.__requests
 
     @requests.setter
-    def request(self, value: Request):
+    def requests(self, value: Request):
         """Property for populating a AWS Chalice request.
 
         Not only saving the request, also active the core configuration system.
@@ -171,6 +171,7 @@ class ApplicationContext(metaclass=core.singleton.SingletonMeta):
             have this metaclass (as declaration).
             """
 
+        self.registering_type = RegisteringType
         self.__injection_class = Component
         self.active_beans = dict()
 
