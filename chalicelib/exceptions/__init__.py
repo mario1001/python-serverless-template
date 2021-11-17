@@ -14,6 +14,7 @@ from chalicelib.exceptions.core_exceptions import (
     DependencyInjectionException,
     NodeNotFoundException,
     BeanNotFoundException,
+    SerializationException,
 )
 from chalicelib.exceptions.handler_exceptions import (
     MAPPED_MESSAGES,

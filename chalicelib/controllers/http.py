@@ -12,10 +12,32 @@ HTTP response class with serialization for handler layer.
 import json
 from enum import Enum
 from http import HTTPStatus
+from typing import Any
+
+import chalicelib.controllers as controllers
+import chalicelib.core as core
 
 DTO_PYDANTIC_JSON_METHOD = "json"
 DTO_PYDANTIC_SERIALIZATION_METHOD = "dict"
 DEFAULT_CLASS_SERIALIZATION_METHOD = "serialize"
+
+
+def to_camel_case(snake_str) -> str:
+    """
+    Little function for passing from snake case vars
+    into camel ones.
+
+    :param snake_str: Variable in snake case in string format
+    :type snake_str: str
+
+    :return: camel case var name
+    :rtype: str
+    """
+
+    components = snake_str.split("_")
+    # We capitalize the first letter of each component except the first one
+    # with the 'title' method and join them together.
+    return components[0] + "".join(x.title() for x in components[1:])
 
 
 class HTTPResponse(object):
@@ -31,10 +53,6 @@ class HTTPResponse(object):
     the body property (would be making conversions needed
     for API Gateway returned response).
     """
-
-    STATUS_CODE_SERIALIZED = "statusCode"
-    BODY_SERIALIZED = "body"
-    HEADERS_SERIALIZED = "headers"
 
     @property
     def status_code(self):
@@ -196,22 +214,6 @@ class HTTPResponse(object):
 
             return getattr(item, DTO_PYDANTIC_JSON_METHOD)()
 
-    def serialize(self):
-        """
-        Method for this instance serialization process.
-
-        For converting HTTP response into a dictionary (JSON format).
-
-        :return: A JSON representation for this object
-        :rtype: dict
-        """
-
-        return {
-            self.STATUS_CODE_SERIALIZED: self.status_code,
-            self.BODY_SERIALIZED: self.body,
-            self.HEADERS_SERIALIZED: self.headers,
-        }
-
 
 class HTTPRequestTypes(Enum):
     """
@@ -226,3 +228,29 @@ class HTTPRequestTypes(Enum):
     PUT = "put"
     DELETE = "delete"
     PATCH = "patch"
+
+
+class HTTPController(controllers.Controller):
+    """
+    HTTP Controller class reference.
+
+    Uses core serialization module for managing
+    HTTP responses for the handlers.
+    """
+
+    @core.register("http")
+    def __init__(self) -> None:
+        super().__init__()
+
+    def serialize(self, http_status: HTTPStatus, body: Any, headers: Any):
+        """
+        Main method for serialization process with a HTTP status,
+        body and headers as information provided.
+
+        :param http_status: [description]
+        :type http_status: HTTPStatus
+        :param body: [description]
+        :type body: Any
+        :param headers: [description]
+        :type headers: Any
+        """

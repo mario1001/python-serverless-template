@@ -45,3 +45,9 @@ class BeanNotFoundException(Exception):
     Raised when using a bean translator for searching
     application components and process has not successful result.
     """
+
+
+class SerializationException(Exception):
+    """
+    Serializer exception class reference.
+    """

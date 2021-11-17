@@ -45,6 +45,10 @@ class ApplicationContext(metaclass=core.singleton.SingletonMeta):
     There's only one instance when running a chalice application, following
     the singleton pattern also for context, makes metadata class registries.
 
+    Raised when having lambda functions (handler layer) serving requests
+    with specific containers. Note a container can serve different requests
+    invoking several lambda functions.
+
     Does provide a property for getting the beans working with (this one
     it's pretty different from Spring configuration, allowing here some
     fresh freedom).

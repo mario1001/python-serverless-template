@@ -14,6 +14,7 @@ for the specific handlers (core related issues).
 
 
 import chalicelib.core as core
+
 from chalice import Chalice
 
 
@@ -45,10 +46,22 @@ def process_request(router: Chalice):
 
     def decorator(func):
         def wrapper(*args, **kwargs):
+
+            import chalicelib.controllers as controllers
+
             core.ApplicationContext.application_context.requests = (
                 router.current_request
             )
-            return func(*args, **kwargs)
+            data = func(*args, **kwargs)
+
+            # Maybe this should be a decorator (separating concepts)
+            # Check if data is serialized (if no -> apply serialization process)
+            return {
+                controllers.http.to_camel_case(key): value
+                for key, value in vars(
+                    controllers.http.HTTPResponse(*data)
+                ).items()
+            }
 
         return wrapper
 
