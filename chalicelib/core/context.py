@@ -17,14 +17,13 @@ By components, we mean the following ones: controllers, services and repositorie
 """
 
 from __future__ import annotations
-from abc import ABCMeta
 
+from abc import ABCMeta
 from typing import Dict, List
 
 import chalicelib.core as core
 import chalicelib.exceptions as exceptions
 import chalicelib.logs as logs
-from aws_resources.exceptions import http_exceptions
 from chalice.app import Request
 
 
@@ -206,12 +205,12 @@ class ApplicationContext(metaclass=core.singleton.SingletonMeta):
                     reference=reference.__name__, bean=str(bean)
                 ),
             )
-        except http_exceptions.BadRequestException as e:
+        except exceptions.http_exceptions.BadRequestException as e:
             raise e
         except Exception as e:
 
             # Incorrect constructor bean, raise injection exception
-            raise exceptions.DependencyInjectionException(
+            raise exceptions.core_exceptions.DependencyInjectionException(
                 "[{MODULE}][{FUNCTION}]: ".format(
                     MODULE=__name__, FUNCTION=self.request_instance.__name__
                 )
@@ -280,7 +279,7 @@ class ApplicationContext(metaclass=core.singleton.SingletonMeta):
 
                 return bean
 
-        raise exceptions.DependencyInjectionException(
+        raise exceptions.core_exceptions.DependencyInjectionException(
             "[{MODULE}][{FUNCTION}]: ".format(
                 MODULE=__name__, FUNCTION=self.request_instance.__name__
             )

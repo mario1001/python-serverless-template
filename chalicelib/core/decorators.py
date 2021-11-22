@@ -115,7 +115,7 @@ def inject(ref: object, values: Iterable = tuple()):
         # Really cannot "inspect" property with instance
         # or cannot assign to the specific module var
 
-        raise exceptions.DependencyInjectionException(
+        raise exceptions.core_exceptions.DependencyInjectionException(
             "[{MODULE}][{FUNCTION}]: ".format(
                 MODULE=__name__, FUNCTION=inject.__name__
             )

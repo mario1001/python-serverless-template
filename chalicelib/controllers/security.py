@@ -11,13 +11,13 @@ that could be injected in the template services.
 """
 
 import chalicelib.core as core
+import chalicelib.exceptions as exceptions
 import chalicelib.logs as logs
 import chalicelib.resources as resources
 import jwt
 from chalice.app import Request
 from chalicelib.controllers import Controller
 from chalicelib.dto.security import AuthenticationPayload
-from chalicelib.exceptions import AuthenticationException
 
 main_resources: resources.Resources = resources.resources
 
@@ -77,7 +77,7 @@ class SecurityController(Controller):
                 )
                 + "Catching error: {}".format(str(e)),
             )
-            raise AuthenticationException(
+            raise exceptions.security_exceptions.AuthenticationException(
                 "[{MODULE}][{FUNCTION}]: ".format(
                     MODULE=__name__, FUNCTION=self.get_payload.__name__
                 )

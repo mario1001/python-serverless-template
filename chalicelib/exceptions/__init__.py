@@ -9,23 +9,12 @@ Defines the exceptions for each layer, depending on the
 modules here (organization and hierarchy).
 """
 
-from chalicelib.exceptions.core_exceptions import (
-    ClientNotFoundException,
-    DependencyInjectionException,
-    NodeNotFoundException,
-    BeanNotFoundException,
-    SerializationException,
-)
-from chalicelib.exceptions.handler_exceptions import (
-    MAPPED_MESSAGES,
-    BadRequestException,
-    HTTPRequestException,
-    InternalServerErrorException,
-    NotImplementedException,
-    UnauthorizedException,
-    UnavailableServiceException,
-)
-from chalicelib.exceptions.repository_exceptions import DatabaseException
-from chalicelib.exceptions.security_exceptions import AuthenticationException
-from chalicelib.exceptions.service_exceptions import ServiceRequestException
-from chalicelib.exceptions.validation_exceptions import InputParameterException
+import chalicelib.exceptions.core_exceptions as core_exceptions
+
+# Handler exceptions are some special ones, prefer importing directly with specific module
+# Core needs to start with a bunch of static exceptions, special ones loading in time execution
+
+import chalicelib.exceptions.repository_exceptions as repository_exceptions
+import chalicelib.exceptions.security_exceptions as security_exceptions
+import chalicelib.exceptions.service_exceptions as service_exception
+import chalicelib.exceptions.validation_exceptions as validation_exceptions

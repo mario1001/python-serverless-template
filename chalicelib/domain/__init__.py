@@ -6,21 +6,21 @@
 Python Serverless template microservice domain module.
 """
 
-# Request options subclasses
-from chalicelib.domain.request_options import (
-    FilterRequest,
-    MySQLRequestOperations,
-    OrderType,
-    Pagination,
-    RequestOperations,
-    RequestOptions,
-    SerializeDefaultValues,
-)
+from abc import ABC, abstractmethod
 
-# Base classes
-from chalicelib.domain.sql_config import (
-    ForeignKeysEnum,
-    ModelClassNames,
-    Relationships,
-    TableNames,
-)
+
+class Domain(ABC):
+    """
+    Template domain class reference.
+
+    For creating/using domain classes
+    to work with in the template along the
+    architecture.
+    """
+
+    @abstractmethod
+    def serialize(self):
+        raise NotImplementedError(
+            "You should specify an implementation"
+            "for serialization process"
+        )

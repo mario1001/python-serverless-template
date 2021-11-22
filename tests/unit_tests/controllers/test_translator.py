@@ -18,13 +18,13 @@ def test_bean_controller_no_bean_exception():
 
     bean_controller = translator.BeanController()
 
-    with pytest.raises(exceptions.BeanNotFoundException) as exception:
+    with pytest.raises(exceptions.core_exceptions.BeanNotFoundException) as exception:
         bean_controller.create_bean(request=data.requests.request_users_body)
 
     exception = exception.value
 
     assert exception
-    assert isinstance(exception, exceptions.BeanNotFoundException)
+    assert isinstance(exception, exceptions.core_exceptions.BeanNotFoundException)
     assert str(exception) == "Could not instantiate a bean for that bind"
 
 

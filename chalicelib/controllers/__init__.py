@@ -79,6 +79,20 @@ class ProcessingController(Controller):
         """
 
 
+class SerializerController(Controller):
+    """
+    Abstract Serializer controller class reference.
+    """
+
+    @abstractmethod
+    def to_json(self):
+        """
+        Main method for processing information.
+
+        Parameters could be customized along with the implementation.
+        """
+
+
 import chalicelib.controllers.http as http
 import chalicelib.controllers.security as security
 import chalicelib.controllers.validation as validation

@@ -17,10 +17,6 @@ from typing import Any
 import chalicelib.controllers as controllers
 import chalicelib.core as core
 
-DTO_PYDANTIC_JSON_METHOD = "json"
-DTO_PYDANTIC_SERIALIZATION_METHOD = "dict"
-DEFAULT_CLASS_SERIALIZATION_METHOD = "serialize"
-
 
 def to_camel_case(snake_str) -> str:
     """
@@ -195,24 +191,7 @@ class HTTPResponse(object):
         # Class model or DTO instance to serialize
         # Inspect serialization methods and execute them
 
-        if hasattr(item, DEFAULT_CLASS_SERIALIZATION_METHOD) and callable(
-            getattr(item, DEFAULT_CLASS_SERIALIZATION_METHOD)
-        ):
-            return getattr(item, DEFAULT_CLASS_SERIALIZATION_METHOD)()
-
-        if hasattr(item, DTO_PYDANTIC_SERIALIZATION_METHOD) and callable(
-            getattr(item, DTO_PYDANTIC_SERIALIZATION_METHOD)
-        ):
-            # Maybe here we should add the specific attributes to serialize (depends on needs)
-            return getattr(item, DTO_PYDANTIC_SERIALIZATION_METHOD)()
-
-        if hasattr(item, DTO_PYDANTIC_JSON_METHOD) and callable(
-            getattr(item, DTO_PYDANTIC_JSON_METHOD)
-        ):
-            # Referred as the last option cause spanish accents causing rare bugs
-            # And some other strange characters would also contain problems
-
-            return getattr(item, DTO_PYDANTIC_JSON_METHOD)()
+        pass
 
 
 class HTTPRequestTypes(Enum):

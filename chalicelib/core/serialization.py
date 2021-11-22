@@ -11,18 +11,22 @@ of serializers to be used.
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Union
 
 from pydantic import BaseModel
 
 import chalicelib.exceptions as exceptions
+import chalicelib.domain as domain
 
 
 class Serializer(ABC):
     """
     Serializer abstract base class reference.
 
-    Defines the operations needed for serialization process.
+    Defines the operations needed for serialization process. This process
+    could be from passing from JSON to class model or the other way around.
+
+    There is no a certain definition of serialization as itself, so just
+    setup the methods here for object conversions.
     """
 
     @abstractmethod
@@ -43,33 +47,42 @@ class PydanticSerializer(Serializer):
     Pydantic serializer class reference.
     """
 
-    def to_json(self, value: Union[BaseModel, List[BaseModel]]) -> dict:
+    def to_json(self, item: BaseModel) -> dict:
         """
         Basic JSON serialization process implementation for a DTO model.
 
-        :param value: Pydantic object (model)
-        :type value: BaseModel
+        :param item: Pydantic object (model)
+        :type item: BaseModel
         :return: A dictionary representation for the object
         :rtype: dict
         """
 
-        if isinstance(value, list):
-            return self.__serialize_items(value)
+        if not isinstance(item, BaseModel):
+            raise exceptions.core_exceptions.SerializationException()
 
-        if not isinstance(value, BaseModel):
-            raise exceptions.SerializationException()
+        return item.dict()
 
-        return value.dict()
 
-    def __serialize_items(self, items: list):
+class DomainSerializer(Serializer):
+    """
+    Pydantic Custom domain serializer class reference.
+
+    For domain custom objects of this template. There is a
+    domain custom class with abstract methods for serialization.
+    """
+
+    def to_json(self, item: object) -> dict:
         """
-        Serialize a list of items (ensuring a list here).
+        Basic JSON serialization process implementation
+        for a custom domain model.
 
-        Passes along different instances of Pydantic models
-        (implementation cannot check types here).
-
-        :param items: [description]
-        :type items: list
+        :param item: Custom Domain object (model)
+        :type item: object
+        :return: A dictionary representation for the object
+        :rtype: dict
         """
 
-        return [item.dict() for item in items if isinstance(item, BaseModel)]
+        if not isinstance(item, domain.Domain):
+            raise exceptions.core_exceptions.SerializationException()
+
+        return item.serialize()

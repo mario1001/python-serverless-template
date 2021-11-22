@@ -17,8 +17,6 @@ import chalicelib.core as core
 import chalicelib.controllers as controllers
 import chalicelib.exceptions as exceptions
 
-from pathlib import Path
-
 from chalice.app import Request
 
 
@@ -109,7 +107,8 @@ class BeanController(controllers.Controller):
         Firstly scans every available resource as model
         (DTO/domain classes existing in the template packages).
 
-        :raises exceptions.BeanNotFoundException: When no model associated with the data provided
+        :raises exceptions.core_exceptions.BeanNotFoundException: When no model
+        associated with the data provided
 
         :param request: AWS Chalice request mapped
         :type request: chalice.app.Request
@@ -150,7 +149,7 @@ class BeanController(controllers.Controller):
             if bean:
                 return bean
 
-        raise exceptions.BeanNotFoundException(
+        raise exceptions.core_exceptions.BeanNotFoundException(
             "Could not instantiate a bean for that bind"
         )
 
@@ -180,7 +179,8 @@ class BeanController(controllers.Controller):
         :param complex_parameters: Special attributes we need to take care of, defaults to list()
         :type complex_parameters: List[Any], optional
 
-        :raises exceptions.BeanNotFoundException: When no model associated with the data provided
+        :raises exceptions.core_exceptions.BeanNotFoundException: When no model
+        associated with the data provided
 
         :return: Custom class instance (with inheritance or not)
         :rtype: type

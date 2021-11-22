@@ -172,37 +172,3 @@ class Audit(MySQL):
         Check if an item has been deleted logically
         """
         return self.deleted_at is not None
-
-
-class EnumEntity(Audit):
-    """
-    Enum table base reference class. This class is created is the base
-    for each "ENUM" substitute table such as types, visualization data
-    """
-
-    __abstract__ = True
-
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    name = Column(String(45), nullable=False)
-
-
-class DisplayEntity(Audit):
-    """
-    Base Display entity class. It works as a base class model for multiple entities
-    that are displayed in the same way and share attributes:
-    Unit, Cluster, Sequence, Resource
-
-    Although each one have additional properties, it is easy to handle them using a
-    common class in order to have cohesion in our data.
-    """
-
-    __abstract__ = True
-
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    order = Column(Integer, nullable=False)
-    title = Column(String(100), nullable=False)
-    description = Column(String(500), nullable=True)
-    only_teacher = Column(Boolean, nullable=True, default=False)
-    demo = Column(Boolean, nullable=True, default=False)
-    active = Column(Boolean, nullable=True, default=True)
-    background_id = Column(Integer, nullable=True, default=None)
