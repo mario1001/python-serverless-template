@@ -40,6 +40,9 @@ def process_request(router: Chalice):
     Configuration components should be an optional flag
     in this functionality (it's executing always right now).
 
+    Provides default core functionality also
+    (like serialization for base HTTP responses).
+
     :param router: Chalice application
     :type router: Chalice
     """
@@ -56,12 +59,7 @@ def process_request(router: Chalice):
 
             # Maybe this should be a decorator (separating concepts)
             # Check if data is serialized (if no -> apply serialization process)
-            return {
-                controllers.http.to_camel_case(key): value
-                for key, value in vars(
-                    controllers.http.HTTPResponse(*data)
-                ).items()
-            }
+            return controllers.http.HTTPResponse(*data).serialize()
 
         return wrapper
 

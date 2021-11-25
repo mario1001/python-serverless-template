@@ -1,6 +1,14 @@
+# Created in November 25, 2021 by Mario Benito.
+#
+# Free Software design purposes at any version of this repository.
+
+"""
+Python Serverless template with Domain Base SQL definition module.
+"""
+
 from datetime import datetime
 from typing import List, Dict
-from sqlalchemy import Column, DateTime, Integer, String, Boolean
+from sqlalchemy import Column, DateTime, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_serializer import SerializerMixin
 
@@ -96,7 +104,6 @@ class MySQL(Base, SerializerMixin):
         return self.to_dict(**serialize_parameters)
 
 
-
 class Audit(MySQL):
     """
     Auditory base class reference. Inherits directly from MySQL
@@ -138,7 +145,7 @@ class Audit(MySQL):
 
         self.created_at = datetime.now()
         self.created_by = user_id
-      
+
     def update_audit(self, user_id: int) -> None:
         """
         Update the auditory fields.
@@ -159,13 +166,11 @@ class Audit(MySQL):
         """
         self.deleted_at = datetime.now()
 
-
     def is_valid(self) -> bool:
         """
         Check if an item has not been deleted logically
         """
         return self.deleted_at is None
-
 
     def is_logically_deleted(self) -> bool:
         """

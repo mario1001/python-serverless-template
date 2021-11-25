@@ -52,6 +52,19 @@ def classproperty(func):
 
 
 def register(*args, **kwargs):
+    """
+    Decorator for registering components.
+
+    Context beans collected with a registry key, this one needs
+    to be loaded here with the help of the register decorator.
+
+    There's always a default component generation key (formed with
+    class associated) but you could define beans for different situations.
+    That's the way it's implemented, set the key with register decorator,
+    you could check these annotations on the controller layer with several classes
+    designed for that.
+    """
+
     def decorator(f):
         main_args = list()
         for arg in args:
@@ -79,12 +92,9 @@ def logger(func):
     """
 
     def wrapper(*args, **kwargs):
-
         logs.system_logger.log(
             "info",
-            "[{MODULE}][{FUNCTION}]: ".format(
-                MODULE=__name__, FUNCTION=logger.__name__
-            )
+            "[{MODULE}][{FUNCTION}]: ".format(MODULE=__name__, FUNCTION=logger.__name__)
             + "Function {type} and arguments: {data}".format(
                 type=func.__name__, data=str(list(args) + list(kwargs))
             ),
@@ -116,9 +126,7 @@ def inject(ref: object, values: Iterable = tuple()):
         # or cannot assign to the specific module var
 
         raise exceptions.core_exceptions.DependencyInjectionException(
-            "[{MODULE}][{FUNCTION}]: ".format(
-                MODULE=__name__, FUNCTION=inject.__name__
-            )
+            "[{MODULE}][{FUNCTION}]: ".format(MODULE=__name__, FUNCTION=inject.__name__)
             + "You need to specify the reference (first attribute)"
         )
 
@@ -133,9 +141,7 @@ def inject(ref: object, values: Iterable = tuple()):
 
     logs.system_logger.log(
         "info",
-        "[{MODULE}][{FUNCTION}]: ".format(
-            MODULE=__name__, FUNCTION=inject.__name__
-        )
+        "[{MODULE}][{FUNCTION}]: ".format(MODULE=__name__, FUNCTION=inject.__name__)
         + "Trying to inject an instance on type {type} with values {keys}".format(
             type=ref.__name__, keys=str(values)
         ),

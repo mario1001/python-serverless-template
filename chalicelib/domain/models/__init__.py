@@ -17,7 +17,5 @@ creations as responses to the HTTP requests.
 # Database ORM Models
 from chalicelib.domain.models.base import (
     Audit,
-    DisplayEntity,
-    EnumEntity,
     MySQL,
 )

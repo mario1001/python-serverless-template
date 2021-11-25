@@ -9,12 +9,18 @@ Contains an enumeration class with available HTTP request types. Also defines
 HTTP response class with serialization for handler layer.
 """
 
+from __future__ import annotations
+
 import json
 from enum import Enum
 from http import HTTPStatus
-from typing import Any
+from typing import Any, Dict, Iterable, Union
 
+from pydantic import BaseModel
+
+import chalicelib.core.serialization as serialization
 import chalicelib.controllers as controllers
+import chalicelib.domain as domain
 import chalicelib.core as core
 
 
@@ -36,7 +42,7 @@ def to_camel_case(snake_str) -> str:
     return components[0] + "".join(x.title() for x in components[1:])
 
 
-class HTTPResponse(object):
+class HTTPResponse(domain.Domain):
     """
     HTTP Response class reference.
 
@@ -49,6 +55,14 @@ class HTTPResponse(object):
     the body property (would be making conversions needed
     for API Gateway returned response).
     """
+
+    @property
+    def http_controller(self) -> HTTPController:
+        return self.http_controller
+
+    @http_controller.setter
+    def http_controller(self, value):
+        self.http_controller = value
 
     @property
     def status_code(self):
@@ -74,6 +88,10 @@ class HTTPResponse(object):
 
     @headers.setter
     def headers(self, value):
+        if isinstance(value, Iterable):
+            value = ",".join(
+                [str(data) if not isinstance(data, str) else data for data in value]
+            )
 
         if not isinstance(value, str):
             value = str(value)
@@ -81,14 +99,15 @@ class HTTPResponse(object):
         self.__headers = {
             "Access-Control-Allow-Headers": "Content-Type",
             "Access-Control-Allow-Origin": value,
-            "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+            "Access-Control-Allow-Methods": "*",
         }
 
     def __init__(
         self,
+        controller: HTTPController,
         http_status: HTTPStatus = HTTPStatus.OK,
         body: object = None,
-        cors_header_url: str = None,
+        cors_url: Union[str, Iterable] = None,
     ):
         """
         Creates an HTTP Response with HTTP status and some body provided.
@@ -97,39 +116,45 @@ class HTTPResponse(object):
         some specific structure (dictionary or list), whatever you want for body to be used
         in this HTTP response.
 
+        You can include CORS url domains (or custom classes with string method conversion)
+        as an iterable (list, set or tuple for example) or just by specifying
+        in string format ('domain_unique', 'domain1, domain2, ...').
+
         :param http_status: HTTP Status instance (from http module), defaults to HTTPStatus.OK
         :type http_status: HTTPStatus, optional
         :param body: Some specific object to send, defaults to None
         :type body: object, optional
         :param cors_header_url: HTTP Cors default header url, defaults to * (every domain possible)
-        :type cors_header_url: str, optional
+        :type cors_header_url: str or Iterable, optional
         """
 
         if not isinstance(http_status, HTTPStatus):
             http_status = HTTPStatus.OK
 
-        if not cors_header_url:
-            cors_header_url = "*"
+        if not cors_url:
+            cors_url = "*"
 
         self.status_code = http_status.value
-        self.headers = cors_header_url
+        self.headers = cors_url
         self.body = body
+        self.http_controller = controller
 
     def serialize_value(self, body: object):
-        if isinstance(body, dict):
-            return self.dumps(self.serialize_items(body))
+        if isinstance(body, dict) or isinstance(body, list):
+            # Prepare standard response (with UTF-8-encoded JSON string as text payload)
 
-        if isinstance(body, list):
             return self.dumps(self.serialize_items(body))
 
         if isinstance(body, bytes):
+            # Prepare this response for a binary payload
+
             self.headers["Content-Type"] = "application/octet-stream"
             return body
 
-        # Check if it's a DTO (form dictionary with that)
-        data = self.__custom_serialization(body)
-        if data is not None:
-            return json.dumps(data) if isinstance(data, dict) else data
+        # Use custom serialization module to check it from there
+        body = self.http_controller.serialize_item(body, self)
+        if body is not None:
+            return json.dumps(body)
 
         # Worst scenario when having complex objects or simple ones
         # Anyway try the string format standard function
@@ -152,12 +177,14 @@ class HTTPResponse(object):
 
         if isinstance(items, dict):
             return {
-                self.serialize_item(attribute): self.serialize_item(value)
+                self.http_controller.serialize_item(
+                    attribute, self
+                ): self.http_controller.serialize_item(value, self)
                 for attribute, value in items.items()
             }
 
         if isinstance(items, list):
-            return [self.serialize_item(item) for item in items]
+            return [self.http_controller.serialize_item(item, self) for item in items]
 
         # Worst scenario when having complex objects or simple ones
         # Anyway try the string format standard function
@@ -170,28 +197,6 @@ class HTTPResponse(object):
             return json.dumps(body, ensure_ascii=False)
         except TypeError:
             return body
-
-    def serialize_item(self, item: object):
-        if isinstance(item, list) or isinstance(item, dict):
-
-            # Needs serialization inspection for elements
-            return self.serialize_items(item)
-
-        if not hasattr(item, "__class__"):
-            return item
-
-        data = self.__custom_serialization(item)
-        if data is not None:
-            return data
-
-        return item
-
-    @staticmethod
-    def __custom_serialization(item: object):
-        # Class model or DTO instance to serialize
-        # Inspect serialization methods and execute them
-
-        pass
 
 
 class HTTPRequestTypes(Enum):
@@ -217,19 +222,58 @@ class HTTPController(controllers.Controller):
     HTTP responses for the handlers.
     """
 
+    SERIALIZERS: Dict[object, serialization.Serializer]
+
     @core.register("http")
     def __init__(self) -> None:
         super().__init__()
 
-    def serialize(self, http_status: HTTPStatus, body: Any, headers: Any):
-        """
-        Main method for serialization process with a HTTP status,
-        body and headers as information provided.
+        self.SERIALIZERS = {
+            BaseModel: serialization.PydanticSerializer,
+            serialization.domain.Domain: serialization.DomainSerializer,
+        }
 
-        :param http_status: [description]
-        :type http_status: HTTPStatus
-        :param body: [description]
-        :type body: Any
-        :param headers: [description]
-        :type headers: Any
+    def request_http_response(
+        self, http_status: HTTPStatus, body: Any, cors_url: Union[str, Iterable] = None
+    ) -> HTTPResponse:
         """
+        Main method for requesting a HTTP response with status, body and headers
+        provided as parameters.
+
+        Responses are not shared (or not supposed to be used like that neither caching responses)
+        and are returned in time execution for now. Each case depends on the HTTP request and have
+        only one way for answering.
+
+        :param http_status: HTTP status instance for code assignment
+        :type http_status: HTTPStatus
+
+        :param body: Body to write as response (ensuring string conversion)
+        :type body: Any
+
+        :param cors_url: Union[str, Iterable], default to None
+        :type cors_url: HTTPStatus
+
+        :return: a new HTTP response created for this case
+        :rtype: object
+        """
+
+        return HTTPResponse(http_status=http_status, body=body, cors_url=cors_url)
+
+    def serialize_item(self, item: object, http_response: HTTPResponse) -> dict:
+        if isinstance(item, list) or isinstance(item, dict):
+
+            # Needs serialization inspection for elements
+            # using HTTP response method for that
+
+            return http_response.serialize_items(item)
+
+        # Just check types and associate specific strategy for serialization
+        for type, strategy in self.SERIALIZERS.items():
+            if isinstance(item, type):
+                core.inject(ref=strategy)
+                return strategy.instance.to_json(item)
+
+        # Worst scenario: use the default dict converter from object
+        # It should be introduced an object (if not this would fail anyway)
+
+        return item.__dict__
