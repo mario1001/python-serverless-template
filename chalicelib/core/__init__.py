@@ -19,5 +19,13 @@ that's why it's designed to be as slightly as possible.
 
 import chalicelib.core.singleton as singleton
 
-from chalicelib.core.decorators import classproperty, inject, logger, register
+# Exposed for now only for handler layer (some special functionalities)
+# That's why its using the from ... import ... syntax here
+from chalicelib.core.decorators import (
+    classproperty,
+    inject,
+    logger,
+    register,
+    process_request,
+)
 from chalicelib.core.context import ApplicationContext

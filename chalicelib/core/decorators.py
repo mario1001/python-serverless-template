@@ -8,17 +8,26 @@ Python Serverless template decorators to work with.
 User-friendly decorators for this template
 dependency injections, automatic logs or class
 properties as main functionality for now.
+
+Some of the decorators uses shared core controllers (if not used
+internally in time execution) because of the common functionality provided
+by them (depends on how have they been exposed).
 """
 
 import re
+from types import ModuleType
 from typing import Iterable
 
 import chalicelib.core as core
 import chalicelib.exceptions as exceptions
 import chalicelib.logs as logs
+from chalice import Chalice
 
 # For passing from Camel case to snake case
 pattern = re.compile(r"(?<!^)(?=[A-Z])")
+
+# Imported dynamically within context initialization
+controllers: ModuleType = None
 
 
 class ClassPropertyDescriptor(object):
@@ -94,7 +103,9 @@ def logger(func):
     def wrapper(*args, **kwargs):
         logs.system_logger.log(
             "info",
-            "[{MODULE}][{FUNCTION}]: ".format(MODULE=__name__, FUNCTION=logger.__name__)
+            "[{MODULE}][{FUNCTION}]: ".format(
+                MODULE=__name__, FUNCTION=logger.__name__
+            )
             + "Function {type} and arguments: {data}".format(
                 type=func.__name__, data=str(list(args) + list(kwargs))
             ),
@@ -126,7 +137,9 @@ def inject(ref: object, values: Iterable = tuple()):
         # or cannot assign to the specific module var
 
         raise exceptions.core_exceptions.DependencyInjectionException(
-            "[{MODULE}][{FUNCTION}]: ".format(MODULE=__name__, FUNCTION=inject.__name__)
+            "[{MODULE}][{FUNCTION}]: ".format(
+                MODULE=__name__, FUNCTION=inject.__name__
+            )
             + "You need to specify the reference (first attribute)"
         )
 
@@ -141,7 +154,9 @@ def inject(ref: object, values: Iterable = tuple()):
 
     logs.system_logger.log(
         "info",
-        "[{MODULE}][{FUNCTION}]: ".format(MODULE=__name__, FUNCTION=inject.__name__)
+        "[{MODULE}][{FUNCTION}]: ".format(
+            MODULE=__name__, FUNCTION=inject.__name__
+        )
         + "Trying to inject an instance on type {type} with values {keys}".format(
             type=ref.__name__, keys=str(values)
         ),
@@ -184,3 +199,52 @@ def inject(ref: object, values: Iterable = tuple()):
         ref.instance = classproperty(instance)
 
     return inner
+
+
+# Handler decorators (supposed to be that firstly)
+
+
+def process_request(router: Chalice):
+    global controllers
+    """
+    Main function for saving AWS Chalice request
+    in the application context.
+
+    You should use this one if you want context registration
+    and configuration for next steps (custom components studying
+    the request).
+
+    Configuration components should be an optional flag
+    in this functionality (it's executing always right now).
+
+    Provides default core functionality also
+    (like serialization for base HTTP responses).
+
+    :param router: Chalice application
+    :type router: Chalice
+    """
+
+    if not controllers:
+        import chalicelib.controllers as controllers_module
+
+        controllers = controllers_module
+
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+
+            core.ApplicationContext.application_context.requests = (
+                router.current_request
+            )
+            data = func(*args, **kwargs)
+
+            # Maybe this should be a decorator (separating concepts)
+            # Check if data is serialized (if no -> apply serialization process)
+            return (
+                controllers.http.HTTPController.instance.request_http_response(
+                    *data
+                ).serialize()
+            )
+
+        return wrapper
+
+    return decorator

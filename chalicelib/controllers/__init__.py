@@ -82,6 +82,8 @@ class ProcessingController(Controller):
 class SerializerController(Controller):
     """
     Abstract Serializer controller class reference.
+
+    FOR NOW: 0 uses in template.
     """
 
     @abstractmethod

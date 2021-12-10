@@ -10,7 +10,7 @@ import json
 
 import app
 import chalicelib.core as core
-import chalicelib.handlers as handlers
+import chalicelib.controllers as controllers
 from chalice import Response
 
 # Core needs to be imported before controllers
@@ -32,8 +32,10 @@ def index():
 
 
 @core.logger
-@router.route("/users", methods=["GET"])
-@handlers.process_request(router)
+@router.route(
+    "/users", methods=[controllers.http.HTTPRequestTypes.GET.value.upper()]
+)
+@core.process_request(router)
 def list_users():
 
     print(router.current_request.to_dict())
@@ -45,8 +47,14 @@ def list_users():
 
 
 @core.logger
-@router.route("/users", methods=["POST", "PUT"])
-@handlers.process_request(router)
+@router.route(
+    "/users",
+    methods=[
+        controllers.http.HTTPRequestTypes.POST.value.upper(),
+        controllers.http.HTTPRequestTypes.PUT.value.upper(),
+    ],
+)
+@core.process_request(router)
 def create_user():
 
     body = router.current_request.json_body
@@ -60,8 +68,11 @@ def create_user():
 
 
 @core.logger
-@router.route("/users/{uid}", methods=["GET"])
-@handlers.process_request(router)
+@router.route(
+    "/users/{uid}",
+    methods=[controllers.http.HTTPRequestTypes.GET.value.upper()],
+)
+@core.process_request(router)
 def get_user(uid):
 
     print(router.current_request.to_dict())
@@ -74,8 +85,11 @@ def get_user(uid):
 
 
 @core.logger
-@router.route("/users/{uid}", methods=["DELETE"])
-@handlers.process_request(router)
+@router.route(
+    "/users/{uid}",
+    methods=[controllers.http.HTTPRequestTypes.DELETE.value.upper()],
+)
+@core.process_request(router)
 def delete_user(uid):
 
     print(router.current_request.to_dict())
